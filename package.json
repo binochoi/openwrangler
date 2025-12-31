@@ -1,0 +1,25 @@
+{
+  "name": "openwrangler",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "nuxi dev playground",
+    "build": "unbuild"
+  },
+  "devDependencies": {
+    "nuxt": "^3.15.0",
+    "typescript": "^5.7.2",
+    "unbuild": "^3.3.1"
+  }
+}
