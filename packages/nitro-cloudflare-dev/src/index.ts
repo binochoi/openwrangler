@@ -34,60 +34,96 @@ declare module "nitropack" {
   }
 }
 
+function parseTomlBindings(content: string, key: string): Array<Record<string, string | boolean>> {
+  const results: Array<Record<string, string | boolean>> = [];
+
+  // Match inline array format: key = [ { ... }, { ... } ]
+  const inlineMatch = content.match(new RegExp(`${key}\\s*=\\s*\\[([\\s\\S]*?)\\](?=\\n[a-z_]|\\n*$)`, 'i'));
+  if (inlineMatch) {
+    const arrayContent = inlineMatch[1];
+    // Match each { ... } block
+    const objectMatches = arrayContent.match(/\{[^}]+\}/g);
+    if (objectMatches) {
+      for (const obj of objectMatches) {
+        const item: Record<string, string | boolean> = {};
+        // Extract key = "value" or key = value
+        const pairs = obj.match(/(\w+)\s*=\s*(?:"([^"]+)"|'([^']+)'|(\w+))/g);
+        if (pairs) {
+          for (const pair of pairs) {
+            const match = pair.match(/(\w+)\s*=\s*(?:"([^"]+)"|'([^']+)'|(\w+))/);
+            if (match) {
+              const k = match[1];
+              const v = match[2] || match[3] || match[4];
+              item[k] = v === 'true' ? true : v === 'false' ? false : v;
+            }
+          }
+        }
+        results.push(item);
+      }
+    }
+  }
+
+  // Match block format: [[key]]
+  const blockRegex = new RegExp(`\\[\\[${key}\\]\\]([\\s\\S]*?)(?=\\[\\[|$)`, 'g');
+  let blockMatch;
+  while ((blockMatch = blockRegex.exec(content)) !== null) {
+    const block = blockMatch[1];
+    const item: Record<string, string | boolean> = {};
+    const lines = block.split('\n');
+    for (const line of lines) {
+      const match = line.match(/^(\w+)\s*=\s*(?:"([^"]+)"|'([^']+)'|(\w+))/);
+      if (match) {
+        const k = match[1];
+        const v = match[2] || match[3] || match[4];
+        item[k] = v === 'true' ? true : v === 'false' ? false : v;
+      }
+    }
+    if (Object.keys(item).length > 0) {
+      results.push(item);
+    }
+  }
+
+  return results;
+}
+
 async function parseWranglerConfig(configPath: string): Promise<RemoteBinding[]> {
   const remoteBindings: RemoteBinding[] = [];
   const content = await fs.readFile(configPath, "utf8");
 
   if (configPath.endsWith(".toml")) {
-    // Parse TOML - simple regex-based parsing for remote = true
-    const r2Match = content.match(/\[\[r2_buckets\]\]([\s\S]*?)(?=\[\[|$)/g);
-    if (r2Match) {
-      for (const block of r2Match) {
-        if (/remote\s*=\s*true/.test(block)) {
-          const bindingMatch = block.match(/binding\s*=\s*"([^"]+)"/);
-          const bucketMatch = block.match(/bucket_name\s*=\s*"([^"]+)"/);
-          if (bindingMatch) {
-            remoteBindings.push({
-              type: "r2",
-              name: bindingMatch[1],
-              bucketName: bucketMatch?.[1],
-            });
-          }
-        }
+    // Parse R2 buckets
+    const r2Bindings = parseTomlBindings(content, 'r2_buckets');
+    for (const item of r2Bindings) {
+      if (item.remote === true && typeof item.binding === 'string') {
+        remoteBindings.push({
+          type: "r2",
+          name: item.binding,
+          bucketName: typeof item.bucket_name === 'string' ? item.bucket_name : undefined,
+        });
       }
     }
 
-    const kvMatch = content.match(/\[\[kv_namespaces\]\]([\s\S]*?)(?=\[\[|$)/g);
-    if (kvMatch) {
-      for (const block of kvMatch) {
-        if (/remote\s*=\s*true/.test(block)) {
-          const bindingMatch = block.match(/binding\s*=\s*"([^"]+)"/);
-          const idMatch = block.match(/id\s*=\s*"([^"]+)"/);
-          if (bindingMatch) {
-            remoteBindings.push({
-              type: "kv",
-              name: bindingMatch[1],
-              namespaceId: idMatch?.[1],
-            });
-          }
-        }
+    // Parse KV namespaces
+    const kvBindings = parseTomlBindings(content, 'kv_namespaces');
+    for (const item of kvBindings) {
+      if (item.remote === true && typeof item.binding === 'string') {
+        remoteBindings.push({
+          type: "kv",
+          name: item.binding,
+          namespaceId: typeof item.id === 'string' ? item.id : undefined,
+        });
       }
     }
 
-    const d1Match = content.match(/\[\[d1_databases\]\]([\s\S]*?)(?=\[\[|$)/g);
-    if (d1Match) {
-      for (const block of d1Match) {
-        if (/remote\s*=\s*true/.test(block)) {
-          const bindingMatch = block.match(/binding\s*=\s*"([^"]+)"/);
-          const idMatch = block.match(/database_id\s*=\s*"([^"]+)"/);
-          if (bindingMatch) {
-            remoteBindings.push({
-              type: "d1",
-              name: bindingMatch[1],
-              databaseId: idMatch?.[1],
-            });
-          }
-        }
+    // Parse D1 databases
+    const d1Bindings = parseTomlBindings(content, 'd1_databases');
+    for (const item of d1Bindings) {
+      if (item.remote === true && typeof item.binding === 'string') {
+        remoteBindings.push({
+          type: "d1",
+          name: item.binding,
+          databaseId: typeof item.database_id === 'string' ? item.database_id : undefined,
+        });
       }
     }
   } else {
