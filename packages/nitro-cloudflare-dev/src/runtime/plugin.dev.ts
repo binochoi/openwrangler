@@ -1,6 +1,6 @@
 import type { NitroAppPlugin } from "nitropack";
 import type { GetPlatformProxyOptions, PlatformProxy } from "wrangler";
-import type { RemoteBindingConfig } from "../index";
+import type { RemoteBinding } from "../index";
 // @ts-ignore
 import { useRuntimeConfig, getRequestURL } from "#imports";
 
@@ -9,8 +9,10 @@ interface RuntimeConfig {
     configPath: string;
     persistDir: string;
     environment?: string;
-    remote?: {
-      bindings?: RemoteBindingConfig;
+    remoteBindings: RemoteBinding[];
+    remoteCredentials: {
+      accountId?: string;
+      apiToken?: string;
     };
   };
 }
@@ -69,36 +71,9 @@ export default <NitroAppPlugin>function (nitroApp) {
 
 async function _getPlatformProxy() {
   const runtimeConfig: RuntimeConfig = useRuntimeConfig();
-  const remoteBindings = runtimeConfig.wrangler.remote?.bindings;
+  const { remoteBindings, remoteCredentials } = runtimeConfig.wrangler;
 
-  // Use openwrangler for remote bindings
-  if (remoteBindings) {
-    const { getBindings } = await import("openwrangler");
-    const bindings = getBindings({
-      accountId: remoteBindings.accountId,
-      apiToken: remoteBindings.apiToken,
-    });
-
-    return {
-      env: bindings,
-      cf: {} as any,
-      ctx: {
-        waitUntil() {},
-        passThroughOnException() {},
-      },
-      caches: {
-        open(): Promise<_CacheStub> {
-          return Promise.resolve(new _CacheStub());
-        },
-        get default(): _CacheStub {
-          return new _CacheStub();
-        },
-      },
-      dispose: () => Promise.resolve(),
-    } satisfies PlatformProxy;
-  }
-
-  // Use local wrangler proxy
+  // Get local wrangler proxy first
   const _pkg = "wrangler"; // Bypass bundling!
   const { getPlatformProxy } = (await import(_pkg).catch(() => {
     throw new Error(
@@ -110,12 +85,34 @@ async function _getPlatformProxy() {
     configPath: runtimeConfig.wrangler.configPath,
     persist: { path: runtimeConfig.wrangler.persistDir },
   };
-  // TODO: investigate why
-  // https://github.com/pi0/nitro-cloudflare-dev/issues/51
   if (runtimeConfig.wrangler.environment) {
     proxyOptions.environment = runtimeConfig.wrangler.environment;
   }
   const proxy = await getPlatformProxy(proxyOptions);
+
+  // If there are remote bindings, overlay them with openwrangler
+  if (remoteBindings.length > 0 && remoteCredentials.accountId && remoteCredentials.apiToken) {
+    const { getBindings } = await import("openwrangler");
+    const openBindings = getBindings({
+      accountId: remoteCredentials.accountId,
+      apiToken: remoteCredentials.apiToken,
+    });
+
+    // Replace remote bindings in proxy.env
+    for (const binding of remoteBindings) {
+      switch (binding.type) {
+        case "r2":
+          (proxy.env as any)[binding.name] = openBindings.r2;
+          break;
+        case "kv":
+          (proxy.env as any)[binding.name] = openBindings.kv;
+          break;
+        case "d1":
+          (proxy.env as any)[binding.name] = openBindings.d1;
+          break;
+      }
+    }
+  }
 
   return proxy;
 }
