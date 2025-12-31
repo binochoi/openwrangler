@@ -28,9 +28,11 @@ await bindings.d1.exec('SELECT * FROM users')
 
 ## 지원 바인딩
 
-- R2 (Object Storage)
-- KV (Key-Value Storage)
-- D1 (Database)
+- R2 (`R2Bucket`)
+- KV (`KVNamespace`)
+- D1 (`D1Database`)
+
+타입은 `@cloudflare/workers-types`에서 가져옴 (직접 정의 X)
 
 ## 개발
 

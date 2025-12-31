@@ -3,49 +3,29 @@ export interface BindingsConfig {
   apiToken: string
 }
 
-export interface R2Binding {
-  list(): Promise<unknown>
-  get(key: string): Promise<unknown>
-  put(key: string, value: unknown): Promise<void>
-  delete(key: string): Promise<void>
-}
-
-export interface KVBinding {
-  get(key: string): Promise<unknown>
-  put(key: string, value: unknown): Promise<void>
-  delete(key: string): Promise<void>
-  list(): Promise<unknown>
-}
-
-export interface D1Binding {
-  exec(query: string): Promise<unknown>
-  prepare(query: string): unknown
-}
-
 export interface Bindings {
-  r2: R2Binding
-  kv: KVBinding
-  d1: D1Binding
+  r2: R2Bucket
+  kv: KVNamespace
+  d1: D1Database
 }
 
 export function getBindings(config: BindingsConfig): Bindings {
   // TODO: Implement Cloudflare REST API calls
   return {
-    r2: {
-      async list() { throw new Error('Not implemented') },
-      async get(key) { throw new Error('Not implemented') },
-      async put(key, value) { throw new Error('Not implemented') },
-      async delete(key) { throw new Error('Not implemented') },
-    },
-    kv: {
-      async get(key) { throw new Error('Not implemented') },
-      async put(key, value) { throw new Error('Not implemented') },
-      async delete(key) { throw new Error('Not implemented') },
-      async list() { throw new Error('Not implemented') },
-    },
-    d1: {
-      async exec(query) { throw new Error('Not implemented') },
-      prepare(query) { throw new Error('Not implemented') },
-    },
+    r2: createR2Binding(config),
+    kv: createKVBinding(config),
+    d1: createD1Binding(config),
   }
+}
+
+function createR2Binding(config: BindingsConfig): R2Bucket {
+  throw new Error('Not implemented')
+}
+
+function createKVBinding(config: BindingsConfig): KVNamespace {
+  throw new Error('Not implemented')
+}
+
+function createD1Binding(config: BindingsConfig): D1Database {
+  throw new Error('Not implemented')
 }
