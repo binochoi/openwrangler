@@ -18,9 +18,11 @@
     "build": "unbuild"
   },
   "devDependencies": {
+    "@binochoi/nitro-cloudflare-dev": "workspace:*",
     "@cloudflare/workers-types": "^4.20251231.0",
     "nuxt": "^3.15.0",
     "typescript": "^5.7.2",
-    "unbuild": "^3.3.1"
+    "unbuild": "^3.3.1",
+    "wrangler": "^3.99.0"
   }
 }

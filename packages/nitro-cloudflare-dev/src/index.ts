@@ -54,7 +54,7 @@ function parseTomlBindings(content: string, key: string): Array<Record<string, s
             if (match) {
               const k = match[1];
               const v = match[2] || match[3] || match[4];
-              item[k] = v === 'true' ? true : v === 'false' ? false : v;
+              item[k] = v === 'true' ? true : (v === 'false' ? false : v);
             }
           }
         }
@@ -75,7 +75,7 @@ function parseTomlBindings(content: string, key: string): Array<Record<string, s
       if (match) {
         const k = match[1];
         const v = match[2] || match[3] || match[4];
-        item[k] = v === 'true' ? true : v === 'false' ? false : v;
+        item[k] = v === 'true' ? true : (v === 'false' ? false : v);
       }
     }
     if (Object.keys(item).length > 0) {

@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@binochoi/nitro-cloudflare-dev':
+        specifier: workspace:*
+        version: link:packages/nitro-cloudflare-dev
       '@cloudflare/workers-types':
         specifier: ^4.20251231.0
         version: 4.20251231.0
@@ -20,6 +23,9 @@ importers:
       unbuild:
         specifier: ^3.3.1
         version: 3.6.1(typescript@5.9.3)(vue@3.5.26(typescript@5.9.3))
+      wrangler:
+        specifier: ^3.99.0
+        version: 3.114.16(@cloudflare/workers-types@4.20251231.0)
 
   packages/nitro-cloudflare-dev:
     dependencies:
