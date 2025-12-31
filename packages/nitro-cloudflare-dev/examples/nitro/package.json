@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "PORT=3001 nitropack dev",
+    "build": "nitropack build",
+    "preview": "node .output/server/index.mjs"
+  },
+  "devDependencies": {
+    "nitropack": "latest",
+    "nitro-cloudflare-dev": "latest"
+  }
+}
