@@ -101,15 +101,18 @@ async function _getPlatformProxy() {
     // Replace remote bindings in proxy.env
     for (const binding of remoteBindings) {
       switch (binding.type) {
-        case "r2":
+        case "r2": {
           (proxy.env as any)[binding.name] = openBindings.r2;
           break;
-        case "kv":
+        }
+        case "kv": {
           (proxy.env as any)[binding.name] = openBindings.kv;
           break;
-        case "d1":
+        }
+        case "d1": {
           (proxy.env as any)[binding.name] = openBindings.d1;
           break;
+        }
       }
     }
   }
@@ -124,6 +127,7 @@ function _createStubProxy(): PlatformProxy {
     ctx: {
       waitUntil() {},
       passThroughOnException() {},
+      props: {},
     },
     caches: {
       open(): Promise<_CacheStub> {

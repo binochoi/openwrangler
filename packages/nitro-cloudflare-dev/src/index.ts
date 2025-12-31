@@ -3,7 +3,7 @@ import { promises as fs } from "node:fs";
 import { fileURLToPath } from "mlly";
 import type { Nitro } from "nitropack";
 import type { Nuxt } from "nuxt/schema";
-import consola from "consola";
+import { consola } from "consola";
 import { colorize } from "consola/utils";
 import { findFile } from "pkg-types";
 
