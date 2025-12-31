@@ -1,3 +1,5 @@
+import type { R2Bucket, KVNamespace, D1Database } from '@cloudflare/workers-types/experimental'
+
 export interface BindingsConfig {
   accountId: string
   apiToken: string
