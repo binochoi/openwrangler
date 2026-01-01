@@ -57,5 +57,8 @@
     "unbuild": "^3.5.0",
     "wrangler": "^3.113.0"
   },
-  "packageManager": "pnpm@10.5.2"
+  "packageManager": "pnpm@10.5.2",
+  "publishConfig": {
+    "access": "public"
+  }
 }
