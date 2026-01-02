@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  nitro-cloudflare-dev: workspace:*
+  '@binochoi/nitro-cloudflare-dev': workspace:*
 
 importers:
 
@@ -17,6 +17,9 @@ importers:
       mlly:
         specifier: ^1.7.4
         version: 1.7.4
+      openwrangler:
+        specifier: ^0.0.1
+        version: 0.0.1
       pkg-types:
         specifier: ^2.1.0
         version: 2.1.0
@@ -67,8 +70,8 @@ importers:
   examples/nitro:
     devDependencies:
       nitro-cloudflare-dev:
-        specifier: workspace:*
-        version: link:../..
+        specifier: latest
+        version: 0.2.2
       nitropack:
         specifier: latest
         version: 2.11.2(typescript@5.8.2)
@@ -76,8 +79,8 @@ importers:
   examples/nuxt:
     devDependencies:
       nitro-cloudflare-dev:
-        specifier: workspace:*
-        version: link:../..
+        specifier: latest
+        version: 0.2.2
       nuxt:
         specifier: ^3.11.0
         version: 3.15.4(@parcel/watcher@2.5.1)(@types/node@22.13.9)(db0@0.3.1)(eslint@9.21.0(jiti@2.4.2))(ioredis@5.6.0)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.34.9)(terser@5.39.0)(typescript@5.8.2)(vite@6.2.0(@types/node@22.13.9)(jiti@2.4.2)(terser@5.39.0)(yaml@2.7.0))(yaml@2.7.0)
@@ -2873,6 +2876,9 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
+  nitro-cloudflare-dev@0.2.2:
+    resolution: {integrity: sha512-aZfNTVdgXPQeAmXW0Tw8hm3usAHr4qVG4Bg3WhHBGeZYuXr9OyT04Ztb+STkMzhyaXvfMHViAaPUPg06iAYqag==}
+
   nitropack@2.11.2:
     resolution: {integrity: sha512-NyXw88hkrigXYo0iDodEbWdLyv8iF69LAj63eS+FDLg8+IDEKv1y58eMKmzk8vW/hwHoi2aimqHTfsZbqFAWrg==}
     engines: {node: ^16.11.0 || >=17.0.0}
@@ -2997,6 +3003,9 @@ packages:
     hasBin: true
     peerDependencies:
       typescript: ^5.x
+
+  openwrangler@0.0.1:
+    resolution: {integrity: sha512-X8z5LgmJGhBaJ06aL/8SnKxgP7Zo8VzwRdVt8bNIaL2CokOWyxuGnVHL5W9Brezx/O1/EvqwwkHF/O3FClCGtw==}
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -7072,6 +7081,12 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
+  nitro-cloudflare-dev@0.2.2:
+    dependencies:
+      consola: 3.4.0
+      mlly: 1.7.4
+      pkg-types: 2.1.0
+
   nitropack@2.11.2(typescript@5.8.2):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.3.4
@@ -7407,6 +7422,8 @@ snapshots:
       supports-color: 9.4.0
       typescript: 5.8.2
       yargs-parser: 21.1.1
+
+  openwrangler@0.0.1: {}
 
   optionator@0.9.4:
     dependencies:

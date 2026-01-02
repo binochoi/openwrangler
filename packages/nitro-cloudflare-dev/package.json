@@ -39,7 +39,7 @@
   "dependencies": {
     "consola": "^3.4.0",
     "mlly": "^1.7.4",
-    "openwrangler": "workspace:*",
+    "openwrangler": "^0.0.1",
     "pkg-types": "^2.1.0"
   },
   "devDependencies": {
