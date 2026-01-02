@@ -92,25 +92,31 @@ async function _getPlatformProxy() {
 
   // If there are remote bindings, overlay them with openwrangler
   if (remoteBindings.length > 0 && remoteCredentials.accountId && remoteCredentials.apiToken) {
-    const { getBindings } = await import("openwrangler");
-    const openBindings = getBindings({
+    const { createR2Binding, createKVBinding, createD1Binding } = await import("openwrangler");
+    const bindingsConfig = {
       accountId: remoteCredentials.accountId,
       apiToken: remoteCredentials.apiToken,
-    });
+    };
 
     // Replace remote bindings in proxy.env
     for (const binding of remoteBindings) {
       switch (binding.type) {
         case "r2": {
-          (proxy.env as any)[binding.name] = openBindings.r2;
+          if (binding.bucketName) {
+            (proxy.env as any)[binding.name] = createR2Binding(bindingsConfig, binding.bucketName);
+          }
           break;
         }
         case "kv": {
-          (proxy.env as any)[binding.name] = openBindings.kv;
+          if (binding.namespaceId) {
+            (proxy.env as any)[binding.name] = createKVBinding(bindingsConfig, binding.namespaceId);
+          }
           break;
         }
         case "d1": {
-          (proxy.env as any)[binding.name] = openBindings.d1;
+          if (binding.databaseId) {
+            (proxy.env as any)[binding.name] = createD1Binding(bindingsConfig, binding.databaseId);
+          }
           break;
         }
       }

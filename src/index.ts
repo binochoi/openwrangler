@@ -5,29 +5,17 @@ export interface BindingsConfig {
   apiToken: string
 }
 
-export interface Bindings {
-  r2: R2Bucket
-  kv: KVNamespace
-  d1: D1Database
-}
-
-export function getBindings(config: BindingsConfig): Bindings {
-  // TODO: Implement Cloudflare REST API calls
-  return {
-    r2: createR2Binding(config),
-    kv: createKVBinding(config),
-    d1: createD1Binding(config),
-  }
-}
-
-function createR2Binding(config: BindingsConfig): R2Bucket {
+export function createR2Binding(config: BindingsConfig, bucketName: string): R2Bucket {
+  // TODO: Implement Cloudflare R2 REST API calls for bucketName
   throw new Error('Not implemented')
 }
 
-function createKVBinding(config: BindingsConfig): KVNamespace {
+export function createKVBinding(config: BindingsConfig, namespaceId: string): KVNamespace {
+  // TODO: Implement Cloudflare KV REST API calls for namespaceId
   throw new Error('Not implemented')
 }
 
-function createD1Binding(config: BindingsConfig): D1Database {
+export function createD1Binding(config: BindingsConfig, databaseId: string): D1Database {
+  // TODO: Implement Cloudflare D1 REST API calls for databaseId
   throw new Error('Not implemented')
 }
