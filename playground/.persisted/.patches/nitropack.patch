@@ -1,0 +1,13 @@
+diff --git a/dist/types/index.d.ts b/dist/types/index.d.ts
+index 88237f5a59661e813ef928a850f20260d88f573a..15ba87e39f27e3cc5be28210c4b2012b9c911cf5 100644
+--- a/dist/types/index.d.ts
++++ b/dist/types/index.d.ts
+@@ -175,7 +175,7 @@ type MatchedRoutes<Route extends string, MatchedKeysResult extends MatchResult<s
+ /**
+  * @link https://github.com/remix-run/remix/blob/2248669ed59fd716e267ea41df5d665d4781f4a9/packages/remix-server-runtime/serialize.ts
+  */
+-type JsonPrimitive = string | number | boolean | string | number | boolean | null;
++type JsonPrimitive = string | number | boolean | string | number | boolean | Date | null;
+ type NonJsonPrimitive = undefined | Function | symbol;
+ type IsAny<T> = 0 extends 1 & T ? true : false;
+ type FilterKeys<TObj extends object, TFilter> = {

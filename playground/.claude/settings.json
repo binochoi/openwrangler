@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.nuxt/**)",
+      "Read(./node_modules/**)",
+      "Read(./.npmrc)",
+      "Read(./drizzle-config.ts)",
+      "Read(./eslint.config.mjs)",
+      "Read(./pnpm-workspace.yaml)",
+      "Read(./src/server/lib/db.ts)",
+      "READ(./.persisted/**)"
+    ]
+  }
+}

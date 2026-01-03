@@ -1,0 +1,2 @@
+patchedDependencies:
+  nitropack: .persisted/.patches/nitropack.patch
