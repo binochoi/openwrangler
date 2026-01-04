@@ -90,6 +90,9 @@ async function _getPlatformProxy() {
   }
   const proxy = await getPlatformProxy(proxyOptions);
 
+  if(!remoteCredentials.accountId || !remoteCredentials.apiToken) {
+    console.warn('config remoteCredentials is empty. then remote is not working');
+  }
   // If there are remote bindings, overlay them with openwrangler
   if (remoteBindings.length > 0 && remoteCredentials.accountId && remoteCredentials.apiToken) {
     const { createR2Binding, createKVBinding, createD1Binding } = await import("openwrangler");
@@ -122,7 +125,6 @@ async function _getPlatformProxy() {
       }
     }
   }
-
   return proxy;
 }
 

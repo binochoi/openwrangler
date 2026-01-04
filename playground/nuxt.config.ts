@@ -33,6 +33,16 @@ export default defineNuxtConfig({
       external: ['cloudflare:sockets', '@aws-sdk/client-s3', 'wrangler'],
     },
     modules: [nitroCloudflareDev],
+    cloudflare: {
+      wrangler: {
+      },
+    },
+    cloudflareDev: {
+      remote: {
+        accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
+        apiToken: process.env.CLOUDFLARE_API_TOKEN,
+      },
+    },
   },
   typescript: {
     strict: true,
