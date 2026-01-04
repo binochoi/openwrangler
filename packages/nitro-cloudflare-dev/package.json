@@ -23,6 +23,7 @@
     "dist"
   ],
   "scripts": {
+    "prepare": "pnpm build",
     "build": "unbuild",
     "dev:nitro": "pnpm run -C examples/nitro dev",
     "dev:nuxt": "pnpm run -C examples/nuxt dev",
@@ -33,13 +34,10 @@
     "test": "pnpm lint && pnpm test:types",
     "test:types": "tsc --noEmit --skipLibCheck"
   },
-  "resolutions": {
-    "@binochoi/nitro-cloudflare-dev": "workspace:*"
-  },
   "dependencies": {
     "consola": "^3.4.0",
     "mlly": "^1.7.4",
-    "openwrangler": "^0.0.1",
+    "openwrangler": "workspace:*",
     "pkg-types": "^2.1.0"
   },
   "devDependencies": {
@@ -55,8 +53,7 @@
     "nuxt": "^3.15.4",
     "prettier": "^3.5.3",
     "typescript": "^5.8.2",
-    "unbuild": "^3.5.0",
-    "wrangler": "^3.113.0"
+    "unbuild": "^3.5.0"
   },
   "packageManager": "pnpm@10.5.2",
   "publishConfig": {

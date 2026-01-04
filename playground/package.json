@@ -33,6 +33,7 @@
     "deploy.only": "dotenv -- wrangler deploy"
   },
   "dependencies": {
+    "@bino0216/nitro-cloudflare-dev": "workspace:*",
     "@ionic/vue": "^8.7.11",
     "@nuxt/eslint": "^1.11.0",
     "@nuxt/ui": "^4.2.1",

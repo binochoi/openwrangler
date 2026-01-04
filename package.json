@@ -14,15 +14,16 @@
     "dist"
   ],
   "scripts": {
-    "dev": "nuxi dev playground",
+    "prepare": "pnpm build",
+    "dev": "cd ./playground && pnpm dev",
     "build": "unbuild"
   },
   "devDependencies": {
-    "@binochoi/nitro-cloudflare-dev": "workspace:*",
+    "@bino0216/nitro-cloudflare-dev": "workspace:*",
     "@cloudflare/workers-types": "^4.20251231.0",
     "nuxt": "^3.15.0",
     "typescript": "^5.7.2",
-    "unbuild": "^3.3.1",
-    "wrangler": "^3.99.0"
+    "wrangler": "^4.54.0",
+    "unbuild": "^3.3.1"
   }
 }

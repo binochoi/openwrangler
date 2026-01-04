@@ -1,5 +1,6 @@
 import removeOtherAliases from './src/utils/removeOtherAliases'
 import config from './src/config'
+import nitroCloudflareDev from '@bino0216/nitro-cloudflare-dev'
 
 export default defineNuxtConfig({
   modules: ['@nuxt/eslint', '@pinia/nuxt', '@vueuse/nuxt', '@pinia/colada-nuxt', '@nuxt/ui'],
@@ -31,6 +32,7 @@ export default defineNuxtConfig({
     rollupConfig: {
       external: ['cloudflare:sockets', '@aws-sdk/client-s3', 'wrangler'],
     },
+    modules: [nitroCloudflareDev],
   },
   typescript: {
     strict: true,
