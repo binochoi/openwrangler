@@ -38,9 +38,13 @@ export default defineNuxtConfig({
       },
     },
     cloudflareDev: {
-      remote: {
+      remoteCredentials: {
         accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
         apiToken: process.env.CLOUDFLARE_API_TOKEN,
+        r2: {
+          accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY,
+          secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_KEY,
+        },
       },
     },
   },

@@ -2,16 +2,17 @@ import type { R2Bucket, KVNamespace, D1Database } from '@cloudflare/workers-type
 import { CloudflareAPIClient } from './utils/http-client'
 import { createKVBinding as createKVBindingImpl } from './bindings/kv'
 import { createD1Binding as createD1BindingImpl } from './bindings/d1'
+import { createR2Binding as createR2BindingImpl, type R2Config } from './bindings/r2'
 
 export interface BindingsConfig {
   accountId: string
   apiToken: string
 }
 
-export function createR2Binding(config: BindingsConfig, bucketName: string): R2Bucket {
-  // TODO: Implement Cloudflare R2 REST API calls for bucketName
-  // R2 requires S3-compatible API with separate Access Key credentials
-  throw new Error('R2 binding not yet implemented. Use KV or D1 instead.')
+export type { R2Config }
+
+export function createR2Binding(config: R2Config, bucketName: string): R2Bucket {
+  return createR2BindingImpl(config, bucketName)
 }
 
 export function createKVBinding(config: BindingsConfig, namespaceId: string): KVNamespace {

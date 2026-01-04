@@ -13,6 +13,10 @@ interface RuntimeConfig {
     remoteCredentials: {
       accountId?: string;
       apiToken?: string;
+      r2?: {
+        accessKeyId: string,
+        secretAccessKey: string,
+      }
     };
   };
 }
@@ -90,35 +94,40 @@ async function _getPlatformProxy() {
   }
   const proxy = await getPlatformProxy(proxyOptions);
 
-  if(!remoteCredentials.accountId || !remoteCredentials.apiToken) {
+  const { accountId, apiToken, r2 } = remoteCredentials;
+  if(!accountId || !apiToken) {
     console.warn('config remoteCredentials is empty. then remote is not working');
   }
   // If there are remote bindings, overlay them with openwrangler
-  if (remoteBindings.length > 0 && remoteCredentials.accountId && remoteCredentials.apiToken) {
+  if (remoteBindings.length > 0 && accountId && apiToken) {
+    const config = { accountId, apiToken }
     const { createR2Binding, createKVBinding, createD1Binding } = await import("openwrangler");
-    const bindingsConfig = {
-      accountId: remoteCredentials.accountId,
-      apiToken: remoteCredentials.apiToken,
-    };
-
     // Replace remote bindings in proxy.env
     for (const binding of remoteBindings) {
       switch (binding.type) {
         case "r2": {
           if (binding.bucketName) {
-            (proxy.env as any)[binding.name] = createR2Binding(bindingsConfig, binding.bucketName);
+            if(r2) {
+            (proxy.env as any)[binding.name] = createR2Binding({
+              ...config,
+              r2AccessKeyId: r2.accessKeyId,
+              r2SecretAccessKey: r2.secretAccessKey,
+            }, binding.bucketName);
+            } else {
+              console.warn('remoteCredentials r2 is empty, then remote is not working');
+            }
           }
           break;
         }
         case "kv": {
           if (binding.namespaceId) {
-            (proxy.env as any)[binding.name] = createKVBinding(bindingsConfig, binding.namespaceId);
+            (proxy.env as any)[binding.name] = createKVBinding(config, binding.namespaceId);
           }
           break;
         }
         case "d1": {
           if (binding.databaseId) {
-            (proxy.env as any)[binding.name] = createD1Binding(bindingsConfig, binding.databaseId);
+            (proxy.env as any)[binding.name] = createD1Binding(config, binding.databaseId);
           }
           break;
         }

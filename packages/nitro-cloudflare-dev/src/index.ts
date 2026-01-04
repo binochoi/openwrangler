@@ -22,9 +22,13 @@ export interface CloudflareDevOptions {
   environment?: string;
   persistDir?: string;
   silent?: boolean;
-  remote?: {
+  remoteCredentials?: {
     accountId?: string;
     apiToken?: string;
+    r2?: {
+      accessKeyId: string,
+      secretAccessKey: string,
+    }
   };
 }
 
@@ -237,10 +241,7 @@ async function nitroModule(nitro: Nitro) {
     persistDir,
     environment: nitro.options.cloudflareDev?.environment,
     remoteBindings,
-    remoteCredentials: {
-      accountId: nitro.options.cloudflareDev?.remote?.accountId || process.env.CF_ACCOUNT_ID,
-      apiToken: nitro.options.cloudflareDev?.remote?.apiToken || process.env.CF_API_TOKEN,
-    },
+    remoteCredentials: nitro.options.cloudflareDev?.remoteCredentials,
   };
 
   // Make sure runtime is transpiled
