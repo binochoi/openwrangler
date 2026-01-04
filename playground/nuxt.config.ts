@@ -1,6 +1,6 @@
-import removeOtherAliases from './src/utils/removeOtherAliases'
-import config from './src/config'
 import nitroCloudflareDev from '@bino0216/nitro-cloudflare-dev'
+import config from './src/config'
+import removeOtherAliases from './src/utils/removeOtherAliases'
 
 export default defineNuxtConfig({
   modules: ['@nuxt/eslint', '@pinia/nuxt', '@vueuse/nuxt', '@pinia/colada-nuxt', '@nuxt/ui'],
@@ -53,7 +53,7 @@ export default defineNuxtConfig({
     typeCheck: true,
   },
   hooks: {
-    'prepare:types'(config) {
+    'prepare:types': function (config) {
       removeOtherAliases(config)
     },
   },

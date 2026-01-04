@@ -48,41 +48,43 @@ function query() {
 
 ### pinia colada
 ```ts
+import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
 // src/queries/article.query.ts
-import { $api } from '@/hooks/api';
-import { useQuery, useMutation, useQueryCache } from '@pinia/colada'
+import { $api } from '@/hooks/api'
 /**
  * use*Query, use*Mutation 함수는 parameter가 항상 Ref이어야 한다.
- * 
+ *
  * ```ts
  * const { state: articleState } = useArticleOneQuery(articleId);
  * ```
  */
-export const useArticleOneQuery = (articleId: Ref<string>) => useQuery(() => ({
+export function useArticleOneQuery(articleId: Ref<string>) {
+  return useQuery(() => ({
     key: ['article', articleId.value],
     query() {
       const res = await $api('/api/articles')
       return res
     },
     enabled: true,
-}));
+  }))
+}
 /**
  * 자꾸 isPending을 쓰는데, isLoading이 옳다.
  * ```ts
  * const { mutateAsync, isLoading } = useArticleMutation();
  * ```
  */
-export const useArticleMutation = (articleId: Ref<string>) => {
-    return useMutation({
-        key: ['article', articleId.value],
-        async mutation(body: IArticlePatchBodyDto) {
-          await $api('/api/articles', {
-            method: 'patch',
-            body,
-          });
-          await useQueryCache().invalidateQueries({ key: ['article'] });
-        }
-    })
+export function useArticleMutation(articleId: Ref<string>) {
+  return useMutation({
+    key: ['article', articleId.value],
+    async mutation(body: IArticlePatchBodyDto) {
+      await $api('/api/articles', {
+        method: 'patch',
+        body,
+      })
+      await useQueryCache().invalidateQueries({ key: ['article'] })
+    }
+  })
 }
 // useArticleListQuery
 // useArticleDeleteMutation
@@ -102,7 +104,6 @@ export const article = pgTable('article', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
-
 ```
 ### entity
 ```ts
@@ -111,6 +112,7 @@ import { createInsertSchema } from 'drizzle-valibot'
 import { category } from 'server/constants/category.constant'
 import { article, articleContent } from 'server/database/schema'
 import * as v from 'valibot'
+
 export const ArticleEntity = v.object({
   ...createInsertSchema(article).entries,
   ...createInsertSchema(articleContent).entries,
@@ -127,13 +129,13 @@ export const ArticleFindManyDto = v.object({
 })
 export type IArticleFindManyDto = v.InferOutput<typeof ArticleFindManyDto>
 export const ArticleInertDto = v.intersect([
-    v.pick(
-      ArticleEntity,
-      ['title', 'contentHTML', 'categorySlug', 'thumbnailUrl']
-    ),
-    v.object({
-      mediaFileURLs: v.optional(v.array(v.string())),
-    })
+  v.pick(
+    ArticleEntity,
+    ['title', 'contentHTML', 'categorySlug', 'thumbnailUrl']
+  ),
+  v.object({
+    mediaFileURLs: v.optional(v.array(v.string())),
+  })
 ])
 export type IArticleInsertDto = v.InferOutput<typeof ArticleInsertDto>
 ```
@@ -142,13 +144,13 @@ export type IArticleInsertDto = v.InferOutput<typeof ArticleInsertDto>
 // src/server/api/articles.post.ts
 
 import * as v from 'valibot'
-import { defineHandlerSchema } from '@/server/framework'
 import { ArticleInsertDto } from '@/server/dtos/article.dto'
+import { defineHandlerSchema } from '@/server/framework'
 
 export default defineEventHandler({
   onRequest: [],
   async handler(e) {
-    const body = await readSuperBody(e, (i) => v.parse(ArticleInsertDto, i));
+    const body = await readSuperBody(e, i => v.parse(ArticleInsertDto, i))
   }
 })
 ```
@@ -162,9 +164,9 @@ export default defineEventHandler({
 export default defineEventHandler({
   onRequest: [],
   async handler(e) {
-    const params = await getValidatedRouterParams(e, (i) => v.parse(ArticleInsertDto, i));
-    const query = await getValidatedQuery(e, (i) => v.parse(ArticleInsertDto, i));
-    const body = await readSuperBody(e, (i) => v.parse(ArticleInsertDto, i));
+    const params = await getValidatedRouterParams(e, i => v.parse(ArticleInsertDto, i))
+    const query = await getValidatedQuery(e, i => v.parse(ArticleInsertDto, i))
+    const body = await readSuperBody(e, i => v.parse(ArticleInsertDto, i))
   }
 })
 ```
@@ -176,10 +178,10 @@ export default defineEventHandler({
 ## 템플릿에서도 항상 camel case 사용
 ```vue
 <template>
-    <!-- X -->
-    <Acomponent :article-id />
-    <!-- O -->
-    <Acomponent :articleId />
+  <!-- X -->
+  <Acomponent :article-id />
+  <!-- O -->
+  <Acomponent :article-id />
 </template>
 ```
 ## Import
@@ -192,23 +194,26 @@ export default defineEventHandler({
 route.query 대신 @vueuse/router의 useRouteQuery를 사용해.
 route.params 대신 @vueuse/router의 useRouteQuery를 사용해.
 ```ts
-useRouteQuery<string>('q');
-useRouteParams<string>('id');
+useRouteQuery<string>('q')
+useRouteParams<string>('id')
 ```
 
 ## queries 폴더의 useQuery 기반 query 함수들 사용법
 ```vue
 <script setup lang="ts">
 // state를 항상 우선적으로 사용한다
-const { state } = useArticleListQuery();
+const { state } = useArticleListQuery()
 </script>
+
 <template>
-    <!-- if문으로 type narrow한다. -->
-    <div v-if="state.status === 'error'">{{ state.error }}</div>
-    <div v-else-if="state.status === 'pending'"></div>
-    <div v-else>
-        <ArticleList :list="state.data" />
-    </div>
+  <!-- if문으로 type narrow한다. -->
+  <div v-if="state.status === 'error'">
+    {{ state.error }}
+  </div>
+  <div v-else-if="state.status === 'pending'" />
+  <div v-else>
+    <ArticleList :list="state.data" />
+  </div>
 </template>
 ```
 
@@ -242,7 +247,6 @@ import * from '@/...'
 작업이 끝날 때마다 `npm run check`를 실행해서 타입체크를 수행한다.
 문제가 있으면 단 한 번만 오류를 수정한다. 한 번 수정 후에도 오류가 남아있으면 사용자에게 알린다.
 
-
 # framework
 src/server/framework에 위치한
 앱에 내장된 자체 프레임워크 라이브러리.
@@ -255,6 +259,7 @@ readValidatedBody 대체.
 ```ts
 import * as v from 'valibot'
 import { injectAuth } from '@/server/framework'
+
 export default defineEventHandler({
   onRequest: [injectAuth],
   async handler(e) {
@@ -264,11 +269,12 @@ export default defineEventHandler({
 ## assertUser
 context에서 유저 데이터를 가져온다. 유저 데이터가 없을 경우 401 반환.
 ```ts
-import { injectAuth, assertUser } from '@/server/framework'
+import { assertUser, injectAuth } from '@/server/framework'
+
 export default defineEventHandler({
   onRequest: [injectAuth],
   async handler(e) {
-    const user = assertUser(e);
+    const user = assertUser(e)
   }
 })
 ```
@@ -277,11 +283,12 @@ context에서 유저의 현재 세션 데이터를 가져온다. 세션 데이�
 ## getUser
 context에서 유저 데이터를 가져온다. 유저가 있어도 되고 없어도 될 경우 사용.
 ```ts
-import { injectAuth, getUser } from '@/server/framework'
+import { getUser, injectAuth } from '@/server/framework'
+
 export default defineEventHandler({
   onRequest: [injectAuth],
   async handler(e) {
-    const user = getUser(e);
+    const user = getUser(e)
   }
 })
 ```

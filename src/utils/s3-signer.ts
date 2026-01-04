@@ -31,7 +31,7 @@ async function hmac(key: ArrayBuffer | Uint8Array, data: string): Promise<ArrayB
     key,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
-    ['sign']
+    ['sign'],
   )
   return await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(data))
 }
@@ -40,7 +40,7 @@ async function getSignatureKey(
   secretAccessKey: string,
   dateStamp: string,
   region: string,
-  service: string
+  service: string,
 ): Promise<ArrayBuffer> {
   const encoder = new TextEncoder()
   const kDate = await hmac(encoder.encode(`AWS4${secretAccessKey}`), dateStamp)
@@ -95,7 +95,7 @@ export async function signRequest(params: SignatureParams): Promise<Record<strin
     method,
     path,
     queryString,
-    canonicalHeadersString + '\n',
+    `${canonicalHeadersString}\n`,
     signedHeaders,
     payloadHash,
   ].join('\n')

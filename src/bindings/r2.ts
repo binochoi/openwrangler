@@ -1,13 +1,13 @@
 import type {
   R2Bucket,
+  R2GetOptions,
+  R2ListOptions,
+  R2MultipartOptions,
+  R2MultipartUpload,
   R2Object,
   R2ObjectBody,
   R2Objects,
-  R2GetOptions,
   R2PutOptions,
-  R2ListOptions,
-  R2MultipartUpload,
-  R2MultipartOptions,
 } from '@cloudflare/workers-types/experimental'
 import { signRequest } from '../utils/s3-signer'
 
@@ -28,10 +28,10 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
       headers?: Record<string, string>
       body?: ArrayBuffer | string | ReadableStream
       queryParams?: Record<string, string>
-    }
+    },
   ): Promise<Response> {
     const queryString = options?.queryParams
-      ? '?' + new URLSearchParams(options.queryParams).toString()
+      ? `?${new URLSearchParams(options.queryParams).toString()}`
       : ''
     const url = `${baseUrl}/${encodeURIComponent(key)}${queryString}`
 
@@ -42,7 +42,8 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
       const chunks: Uint8Array[] = []
       while (true) {
         const { done, value } = await reader.read()
-        if (done) break
+        if (done)
+          break
         chunks.push(value)
       }
       const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0)
@@ -53,7 +54,8 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
         offset += chunk.length
       }
       body = result.buffer
-    } else {
+    }
+    else {
       body = options?.body
     }
 
@@ -81,10 +83,10 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
     options?: {
       headers?: Record<string, string>
       queryParams?: Record<string, string>
-    }
+    },
   ): Promise<Response> {
     const queryString = options?.queryParams
-      ? '?' + new URLSearchParams(options.queryParams).toString()
+      ? `?${new URLSearchParams(options.queryParams).toString()}`
       : ''
     const url = `${baseUrl}${queryString}`
 
@@ -113,9 +115,10 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
         if (typeof options.range === 'object') {
           const { offset, length, suffix } = options.range
           if (suffix) {
-            headers['Range'] = `bytes=-${suffix}`
-          } else if (offset !== undefined) {
-            headers['Range'] = length
+            headers.Range = `bytes=-${suffix}`
+          }
+          else if (offset !== undefined) {
+            headers.Range = length
               ? `bytes=${offset}-${offset + length - 1}`
               : `bytes=${offset}-`
           }
@@ -159,7 +162,7 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
       const r2Object: R2ObjectBody = {
         key,
         version: response.headers.get('x-amz-version-id') || '',
-        size: parseInt(response.headers.get('content-length') || '0', 10),
+        size: Number.parseInt(response.headers.get('content-length') || '0', 10),
         etag: response.headers.get('etag') || '',
         httpEtag: response.headers.get('etag') || '',
         checksums: {},
@@ -178,7 +181,7 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
         range: options?.range
           ? {
               offset: 0,
-              length: parseInt(response.headers.get('content-length') || '0', 10),
+              length: Number.parseInt(response.headers.get('content-length') || '0', 10),
             }
           : undefined,
         body: response.body!,
@@ -215,7 +218,7 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
     async put(
       key: string,
       value: ReadableStream | ArrayBuffer | ArrayBufferView | string,
-      options?: R2PutOptions
+      options?: R2PutOptions,
     ): Promise<R2Object> {
       const headers: Record<string, string> = {}
 
@@ -236,7 +239,7 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
           headers['Cache-Control'] = options.httpMetadata.cacheControl
         }
         if (options.httpMetadata.cacheExpiry) {
-          headers['Expires'] = options.httpMetadata.cacheExpiry.toUTCString()
+          headers.Expires = options.httpMetadata.cacheExpiry.toUTCString()
         }
       }
 
@@ -250,7 +253,8 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
       let body: ReadableStream | ArrayBuffer | string
       if (ArrayBuffer.isView(value)) {
         body = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength)
-      } else {
+      }
+      else {
         body = value
       }
 
@@ -281,9 +285,10 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
         if (!response.ok && response.status !== 404) {
           throw new Error(`R2 DELETE failed: ${response.status}`)
         }
-      } else {
+      }
+      else {
         // Multi-object delete using S3 API
-        const deleteXml = `<?xml version="1.0" encoding="UTF-8"?>
+        const _deleteXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Delete>
   ${keyArray.map(key => `<Object><Key>${key}</Key></Object>`).join('')}
 </Delete>`
@@ -321,7 +326,7 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
       return {
         key,
         version: response.headers.get('x-amz-version-id') || '',
-        size: parseInt(response.headers.get('content-length') || '0', 10),
+        size: Number.parseInt(response.headers.get('content-length') || '0', 10),
         etag: response.headers.get('etag') || '',
         httpEtag: response.headers.get('etag') || '',
         checksums: {},
@@ -349,13 +354,13 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
         queryParams['max-keys'] = options.limit.toString()
       }
       if (options?.prefix) {
-        queryParams['prefix'] = options.prefix
+        queryParams.prefix = options.prefix
       }
       if (options?.cursor) {
         queryParams['continuation-token'] = options.cursor
       }
       if (options?.delimiter) {
-        queryParams['delimiter'] = options.delimiter
+        queryParams.delimiter = options.delimiter
       }
       if (options?.startAfter) {
         queryParams['start-after'] = options.startAfter
@@ -379,7 +384,7 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
       while ((match = contentsRegex.exec(xml)) !== null) {
         const content = match[1]
         const key = content.match(/<Key>(.*?)<\/Key>/)?.[1] || ''
-        const size = parseInt(content.match(/<Size>(.*?)<\/Size>/)?.[1] || '0', 10)
+        const size = Number.parseInt(content.match(/<Size>(.*?)<\/Size>/)?.[1] || '0', 10)
         const etag = content.match(/<ETag>(.*?)<\/ETag>/)?.[1] || ''
         const lastModified = content.match(/<LastModified>(.*?)<\/LastModified>/)?.[1] || ''
 
@@ -413,11 +418,11 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
       }
     },
 
-    createMultipartUpload(key: string, options?: R2MultipartOptions): Promise<R2MultipartUpload> {
+    createMultipartUpload(_key: string, _options?: R2MultipartOptions): Promise<R2MultipartUpload> {
       throw new Error('R2 multipart upload not yet implemented')
     },
 
-    resumeMultipartUpload(key: string, uploadId: string): R2MultipartUpload {
+    resumeMultipartUpload(_key: string, _uploadId: string): R2MultipartUpload {
       throw new Error('R2 multipart upload not yet implemented')
     },
   }

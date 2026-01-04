@@ -1,10 +1,9 @@
 import type {
   KVNamespace,
-  KVNamespaceListResult,
-  KVNamespaceListOptions,
-  KVNamespaceGetOptions,
-  KVNamespacePutOptions,
   KVNamespaceGetWithMetadataResult,
+  KVNamespaceListOptions,
+  KVNamespaceListResult,
+  KVNamespacePutOptions,
 } from '@cloudflare/workers-types/experimental'
 import type { CloudflareAPIClient } from '../utils/http-client'
 
@@ -20,14 +19,14 @@ interface KVAPIListResponse {
 
 export function createKVBinding(
   client: CloudflareAPIClient,
-  namespaceId: string
+  namespaceId: string,
 ): KVNamespace {
   const baseEndpoint = `/accounts/${client.getAccountId()}/storage/kv/namespaces/${namespaceId}`
 
   async function getValue(
     key: string,
     type: 'text' | 'json' | 'arrayBuffer' | 'stream' | undefined,
-    cacheTtl?: number
+    cacheTtl?: number,
   ): Promise<any> {
     try {
       const url = `${baseEndpoint}/values/${encodeURIComponent(key)}`
@@ -41,7 +40,7 @@ export function createKVBinding(
       const response = await fetch(`https://api.cloudflare.com/client/v4${url}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${(client as any).apiToken}`,
+          Authorization: `Bearer ${(client as any).apiToken}`,
           ...headers,
         },
       })
@@ -65,7 +64,8 @@ export function createKVBinding(
         default:
           return await response.text()
       }
-    } catch (error) {
+    }
+    catch (error) {
       if ((error as any)?.message?.includes('404')) {
         return null
       }
@@ -75,7 +75,7 @@ export function createKVBinding(
 
   async function getValueWithMetadata(
     key: string,
-    type: 'text' | 'json' | 'arrayBuffer' | 'stream' | undefined
+    type: 'text' | 'json' | 'arrayBuffer' | 'stream' | undefined,
   ): Promise<KVNamespaceGetWithMetadataResult<any, any>> {
     try {
       const url = `${baseEndpoint}/values/${encodeURIComponent(key)}`
@@ -83,7 +83,7 @@ export function createKVBinding(
       const response = await fetch(`https://api.cloudflare.com/client/v4${url}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${(client as any).apiToken}`,
+          Authorization: `Bearer ${(client as any).apiToken}`,
         },
       })
 
@@ -119,7 +119,8 @@ export function createKVBinding(
         metadata: parsedMetadata,
         cacheStatus: response.headers.get('cf-cache-status'),
       }
-    } catch (error) {
+    }
+    catch (error) {
       if ((error as any)?.message?.includes('404')) {
         return { value: null, metadata: null, cacheStatus: null }
       }
@@ -150,28 +151,32 @@ export function createKVBinding(
     async put(
       key: string,
       value: string | ArrayBuffer | ArrayBufferView | ReadableStream,
-      options?: KVNamespacePutOptions
+      options?: KVNamespacePutOptions,
     ): Promise<void> {
       const url = `${baseEndpoint}/values/${encodeURIComponent(key)}`
       const headers: Record<string, string> = {
-        'Authorization': `Bearer ${(client as any).apiToken}`,
+        Authorization: `Bearer ${(client as any).apiToken}`,
       }
 
       let body: string | ArrayBuffer
       if (typeof value === 'string') {
         body = value
-      } else if (value instanceof ArrayBuffer) {
+      }
+      else if (value instanceof ArrayBuffer) {
         body = value
-      } else if (ArrayBuffer.isView(value)) {
+      }
+      else if (ArrayBuffer.isView(value)) {
         body = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength)
-      } else if (value instanceof ReadableStream) {
+      }
+      else if (value instanceof ReadableStream) {
         // Convert ReadableStream to ArrayBuffer
         const reader = value.getReader()
         const chunks: Uint8Array[] = []
 
         while (true) {
           const { done, value: chunk } = await reader.read()
-          if (done) break
+          if (done)
+            break
           chunks.push(chunk)
         }
 
@@ -183,8 +188,9 @@ export function createKVBinding(
           offset += chunk.length
         }
         body = result.buffer
-      } else {
-        throw new Error('Unsupported value type')
+      }
+      else {
+        throw new TypeError('Unsupported value type')
       }
 
       const queryParams = new URLSearchParams()
@@ -215,7 +221,7 @@ export function createKVBinding(
       const response = await fetch(`https://api.cloudflare.com/client/v4${url}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${(client as any).apiToken}`,
+          Authorization: `Bearer ${(client as any).apiToken}`,
         },
       })
 
@@ -243,7 +249,7 @@ export function createKVBinding(
     },
 
     async list<Metadata = unknown>(
-      options?: KVNamespaceListOptions
+      options?: KVNamespaceListOptions,
     ): Promise<KVNamespaceListResult<Metadata>> {
       const queryParams = new URLSearchParams()
 
@@ -272,7 +278,8 @@ export function createKVBinding(
           })),
           cacheStatus: null,
         }
-      } else {
+      }
+      else {
         return {
           list_complete: false,
           keys: data.keys.map(k => ({

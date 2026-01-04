@@ -1,7 +1,7 @@
-import type { D1Database, D1PreparedStatement, D1Result, D1ExecResult } from '@cloudflare/workers-types/experimental'
+import type { D1Database, D1ExecResult, D1PreparedStatement, D1Result } from '@cloudflare/workers-types/experimental'
 import type { CloudflareAPIClient } from '../utils/http-client'
 
-interface D1APIQueryRequest {
+interface _D1APIQueryRequest {
   sql: string
   params?: unknown[]
 }
@@ -27,7 +27,7 @@ class D1PreparedStatementImpl implements D1PreparedStatement {
   constructor(
     private query: string,
     private client: CloudflareAPIClient,
-    private databaseId: string
+    private databaseId: string,
   ) {}
 
   bind(...values: unknown[]): D1PreparedStatement {
@@ -89,7 +89,7 @@ class D1PreparedStatementImpl implements D1PreparedStatement {
     }
 
     // Convert objects to arrays
-    const raw = result.results.map(row => {
+    const raw = result.results.map((row) => {
       if (typeof row === 'object' && row !== null) {
         return Object.values(row) as T
       }
@@ -111,7 +111,7 @@ class D1PreparedStatementImpl implements D1PreparedStatement {
 
 export function createD1Binding(
   client: CloudflareAPIClient,
-  databaseId: string
+  databaseId: string,
 ): D1Database {
   return {
     prepare(query: string): D1PreparedStatement {
@@ -121,7 +121,7 @@ export function createD1Binding(
     async batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
       const endpoint = `/accounts/${client.getAccountId()}/d1/database/${databaseId}/query`
 
-      const queries = statements.map(stmt => {
+      const queries = statements.map((stmt) => {
         const impl = stmt as D1PreparedStatementImpl
         return {
           sql: (impl as any).query,

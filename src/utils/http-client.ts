@@ -24,7 +24,7 @@ export class CloudflareAPIClient {
     method: string,
     endpoint: string,
     body?: unknown,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
 

@@ -1,14 +1,14 @@
-import type { PlatformProxy } from "wrangler";
+import type { PlatformProxy } from 'wrangler'
 
-declare module "h3" {
+declare module 'h3' {
   interface H3EventContext {
-    cf: PlatformProxy["cf"];
+    cf: PlatformProxy['cf']
     cloudflare: {
-      request: Request & { cf: PlatformProxy["cf"] };
-      env: PlatformProxy["env"];
-      context: PlatformProxy["ctx"];
-    };
+      request: Request & { cf: PlatformProxy['cf'] }
+      env: PlatformProxy['env']
+      context: PlatformProxy['ctx']
+    }
   }
 }
 
-export default {};
+export default {}

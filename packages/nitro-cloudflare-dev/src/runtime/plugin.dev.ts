@@ -1,50 +1,50 @@
-import type { NitroAppPlugin } from "nitropack";
-import type { GetPlatformProxyOptions, PlatformProxy } from "wrangler";
-import type { RemoteBinding } from "../index";
+import type { NitroAppPlugin } from 'nitropack'
+import type { GetPlatformProxyOptions, PlatformProxy } from 'wrangler'
+import type { RemoteBinding } from '../index'
 // @ts-ignore
-import { useRuntimeConfig, getRequestURL } from "#imports";
+import { getRequestURL, useRuntimeConfig } from '#imports'
 
 interface RuntimeConfig {
   wrangler: {
-    configPath: string;
-    persistDir: string;
-    environment?: string;
-    remoteBindings: RemoteBinding[];
+    configPath: string
+    persistDir: string
+    environment?: string
+    remoteBindings: RemoteBinding[]
     remoteCredentials: {
-      accountId?: string;
-      apiToken?: string;
+      accountId?: string
+      apiToken?: string
       r2?: {
-        accessKeyId: string,
-        secretAccessKey: string,
+        accessKeyId: string
+        secretAccessKey: string
       }
-    };
-  };
+    }
+  }
 }
 
 const _proxy = _getPlatformProxy()
   .catch((error) => {
-    console.error("Failed to initialize wrangler bindings proxy", error);
-    return _createStubProxy();
+    console.error('Failed to initialize wrangler bindings proxy', error)
+    return _createStubProxy()
   })
   .then((proxy) => {
-    (globalThis as any).__env__ = proxy.env;
-    return proxy;
+    (globalThis as any).__env__ = proxy.env
+    return proxy
   });
 
-(globalThis as any).__env__ = _proxy.then((proxy) => proxy.env);
+(globalThis as any).__env__ = _proxy.then(proxy => proxy.env)
 
-export default <NitroAppPlugin>function (nitroApp) {
-  nitroApp.hooks.hook("request", async (event) => {
-    const proxy = await _proxy;
+export default <NitroAppPlugin> function (nitroApp) {
+  nitroApp.hooks.hook('request', async (event) => {
+    const proxy = await _proxy
 
     // Inject the various cf values from the proxy in event and event.context
-    event.context.cf = proxy.cf;
-    event.context.waitUntil = proxy.ctx.waitUntil.bind(proxy.ctx);
+    event.context.cf = proxy.cf
+    event.context.waitUntil = proxy.ctx.waitUntil.bind(proxy.ctx)
 
     const request = new Request(getRequestURL(event)) as Request & {
-      cf: typeof proxy.cf;
-    };
-    request.cf = proxy.cf;
+      cf: typeof proxy.cf
+    }
+    request.cf = proxy.cf
 
     event.context.cloudflare = {
       ...event.context.cloudflare,
@@ -59,82 +59,83 @@ export default <NitroAppPlugin>function (nitroApp) {
     (event.node.req as any).__unenv__ = {
       ...(event.node.req as any).__unenv__,
       waitUntil: event.context.waitUntil,
-    };
-  });
+    }
+  })
 
   // https://github.com/pi0/nitro-cloudflare-dev/issues/5
   // https://github.com/unjs/hookable/issues/98
   // @ts-expect-error
-  nitroApp.hooks._hooks.request.unshift(nitroApp.hooks._hooks.request.pop());
+  nitroApp.hooks._hooks.request.unshift(nitroApp.hooks._hooks.request.pop())
 
   // Dispose proxy when Nitro is closed
-  nitroApp.hooks.hook("close", () => {
-    return _proxy?.then((proxy) => proxy.dispose);
-  });
-};
+  nitroApp.hooks.hook('close', () => {
+    return _proxy?.then(proxy => proxy.dispose)
+  })
+}
 
 async function _getPlatformProxy() {
-  const runtimeConfig: RuntimeConfig = useRuntimeConfig();
-  const { remoteBindings, remoteCredentials } = runtimeConfig.wrangler;
+  const runtimeConfig: RuntimeConfig = useRuntimeConfig()
+  const { remoteBindings, remoteCredentials } = runtimeConfig.wrangler
 
   // Get local wrangler proxy first
-  const _pkg = "wrangler"; // Bypass bundling!
+  const _pkg = 'wrangler' // Bypass bundling!
   const { getPlatformProxy } = (await import(_pkg).catch(() => {
     throw new Error(
-      "Package `wrangler` not found, please install it with: `npx nypm@latest add -D wrangler`",
-    );
-  })) as typeof import("wrangler");
+      'Package `wrangler` not found, please install it with: `npx nypm@latest add -D wrangler`',
+    )
+  })) as typeof import('wrangler')
 
   const proxyOptions: GetPlatformProxyOptions = {
     configPath: runtimeConfig.wrangler.configPath,
     persist: { path: runtimeConfig.wrangler.persistDir },
-  };
-  if (runtimeConfig.wrangler.environment) {
-    proxyOptions.environment = runtimeConfig.wrangler.environment;
   }
-  const proxy = await getPlatformProxy(proxyOptions);
+  if (runtimeConfig.wrangler.environment) {
+    proxyOptions.environment = runtimeConfig.wrangler.environment
+  }
+  const proxy = await getPlatformProxy(proxyOptions)
 
-  const { accountId, apiToken, r2 } = remoteCredentials;
-  if(!accountId || !apiToken) {
-    console.warn('config remoteCredentials is empty. then remote is not working');
+  const { accountId, apiToken, r2 } = remoteCredentials
+  if (!accountId || !apiToken) {
+    console.warn('config remoteCredentials is empty. then remote is not working')
   }
   // If there are remote bindings, overlay them with openwrangler
   if (remoteBindings.length > 0 && accountId && apiToken) {
     const config = { accountId, apiToken }
-    const { createR2Binding, createKVBinding, createD1Binding } = await import("openwrangler");
+    const { createR2Binding, createKVBinding, createD1Binding } = await import('openwrangler')
     // Replace remote bindings in proxy.env
     for (const binding of remoteBindings) {
       switch (binding.type) {
-        case "r2": {
+        case 'r2': {
           if (binding.bucketName) {
-            if(r2) {
-            (proxy.env as any)[binding.name] = createR2Binding({
-              ...config,
-              r2AccessKeyId: r2.accessKeyId,
-              r2SecretAccessKey: r2.secretAccessKey,
-            }, binding.bucketName);
-            } else {
-              console.warn('remoteCredentials r2 is empty, then remote is not working');
+            if (r2) {
+              (proxy.env as any)[binding.name] = createR2Binding({
+                ...config,
+                r2AccessKeyId: r2.accessKeyId,
+                r2SecretAccessKey: r2.secretAccessKey,
+              }, binding.bucketName)
+            }
+            else {
+              console.warn('remoteCredentials r2 is empty, then remote is not working')
             }
           }
-          break;
+          break
         }
-        case "kv": {
+        case 'kv': {
           if (binding.namespaceId) {
-            (proxy.env as any)[binding.name] = createKVBinding(config, binding.namespaceId);
+            (proxy.env as any)[binding.name] = createKVBinding(config, binding.namespaceId)
           }
-          break;
+          break
         }
-        case "d1": {
+        case 'd1': {
           if (binding.databaseId) {
-            (proxy.env as any)[binding.name] = createD1Binding(config, binding.databaseId);
+            (proxy.env as any)[binding.name] = createD1Binding(config, binding.databaseId)
           }
-          break;
+          break
         }
       }
     }
   }
-  return proxy;
+  return proxy
 }
 
 function _createStubProxy(): PlatformProxy {
@@ -148,30 +149,30 @@ function _createStubProxy(): PlatformProxy {
     },
     caches: {
       open(): Promise<_CacheStub> {
-        const result = Promise.resolve(new _CacheStub());
-        return result;
+        const result = Promise.resolve(new _CacheStub())
+        return result
       },
       get default(): _CacheStub {
-        return new _CacheStub();
+        return new _CacheStub()
       },
     },
     dispose: () => Promise.resolve(),
-  };
+  }
 }
 
 class _CacheStub {
   delete(): Promise<boolean> {
-    const result = Promise.resolve(false);
-    return result;
+    const result = Promise.resolve(false)
+    return result
   }
 
   match() {
-    const result = Promise.resolve(undefined);
-    return result;
+    const result = Promise.resolve(undefined)
+    return result
   }
 
   put(): Promise<void> {
-    const result = Promise.resolve();
-    return result;
+    const result = Promise.resolve()
+    return result
   }
 }

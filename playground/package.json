@@ -1,8 +1,8 @@
 {
   "name": "nuxt-fullstack-starter",
+  "type": "module",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "postinstall": "run-s env.touch env.dev prepare",
     "env.touch": "rimraf .env && cp .env.example .env && printf \"INFISICAL_TOKEN=$BINOCORP_INFISICAL_TOKEN\n\" >> .env",

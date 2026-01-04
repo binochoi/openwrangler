@@ -1,5 +1,5 @@
-import fetchAuthSession from '../hooks/fetchAuthSession'
 import { defineStore } from 'pinia'
+import fetchAuthSession from '../hooks/fetchAuthSession'
 
 export const useAuthStore = defineStore('auth', () => {
   const auth = fetchAuthSession()

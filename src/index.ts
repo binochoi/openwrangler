@@ -1,8 +1,9 @@
-import type { R2Bucket, KVNamespace, D1Database } from '@cloudflare/workers-types/experimental'
-import { CloudflareAPIClient } from './utils/http-client'
-import { createKVBinding as createKVBindingImpl } from './bindings/kv'
+import type { D1Database, KVNamespace, R2Bucket } from '@cloudflare/workers-types/experimental'
+import type { R2Config } from './bindings/r2'
 import { createD1Binding as createD1BindingImpl } from './bindings/d1'
-import { createR2Binding as createR2BindingImpl, type R2Config } from './bindings/r2'
+import { createKVBinding as createKVBindingImpl } from './bindings/kv'
+import { createR2Binding as createR2BindingImpl } from './bindings/r2'
+import { CloudflareAPIClient } from './utils/http-client'
 
 export interface BindingsConfig {
   accountId: string

@@ -1,6 +1,6 @@
+import unusedImports from 'eslint-plugin-unused-imports'
 // @ts-check
 import withNuxt from './.nuxt/eslint.config.mjs'
-import unusedImports from 'eslint-plugin-unused-imports'
 
 export default withNuxt({
   plugins: {

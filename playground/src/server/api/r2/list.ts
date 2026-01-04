@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export default defineEventHandler({
   async handler(event) {
     const env = event.context.cloudflare?.env

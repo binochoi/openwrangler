@@ -1,4 +1,8 @@
+shellEmulator: true
+
+trustPolicy: no-downgrade
+
 packages:
-  - '.'
+  - .
   - 'packages/*'
-  - 'playground'
+  - playground

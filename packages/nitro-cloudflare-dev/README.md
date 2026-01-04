@@ -17,18 +17,18 @@ For **Nuxt** update `nuxt.config.ts`:
 
 ```js
 export default defineNuxtConfig({
-  modules: ["nitro-cloudflare-dev"],
-});
+  modules: ['nitro-cloudflare-dev'],
+})
 ```
 
 For **Nitro** update `nitro.config.ts`:
 
 ```js
-import nitroCloudflareBindings from "nitro-cloudflare-dev";
+import nitroCloudflareBindings from 'nitro-cloudflare-dev'
 
 export default defineNitroConfig({
   modules: [nitroCloudflareBindings],
-});
+})
 ```
 
 ## Configuration and persistence

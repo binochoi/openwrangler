@@ -1,8 +1,8 @@
-import { defineConfig } from 'histoire'
+import path from 'node:path'
 import { HstVue } from '@histoire/plugin-vue'
-import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
+import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'histoire'
 
 export default defineConfig({
   plugins: [
