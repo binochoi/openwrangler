@@ -76,7 +76,11 @@ export async function signRequest(params: SignatureParams): Promise<Record<strin
   const canonicalHeaders: Record<string, string> = {
     host,
     'x-amz-date': amzDate,
-    ...headers,
+  }
+
+  // 모든 헤더 이름을 소문자로 변환 (AWS Signature V4 요구사항)
+  for (const [key, value] of Object.entries(headers)) {
+    canonicalHeaders[key.toLowerCase()] = value
   }
 
   const signedHeaders = Object.keys(canonicalHeaders).sort().join(';')
