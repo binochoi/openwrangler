@@ -1,12 +1,12 @@
 {
-  "name": "nuxt-fullstack-starter",
+  "name": "playground",
   "type": "module",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "postinstall": "run-s env.touch env.dev prepare",
     "env.touch": "rimraf .env && cp .env.example .env && printf \"INFISICAL_TOKEN=$BINOCORP_INFISICAL_TOKEN\n\" >> .env",
-    "env.dev": "dotenv -- run-p env.dev.*",
+    "env.dev": "dotenv -- run-p env.dev.common env.dev.local",
     "env.dev.common": "dotenv -- infisical export --env=dev --path=/ >> .env --projectId 26631d7e-97f4-4246-ad64-511de8da3ae7",
     "env.dev.local": "dotenv -- infisical export --env=dev --path=/nuxt-fullstack-starter >> .env --projectId 26631d7e-97f4-4246-ad64-511de8da3ae7",
     "build": "nuxt build",
