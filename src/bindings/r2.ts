@@ -1,6 +1,8 @@
 import type {
   R2Bucket,
+  R2Conditional,
   R2GetOptions,
+  R2HTTPMetadata,
   R2ListOptions,
   R2MultipartOptions,
   R2MultipartUpload,
@@ -8,6 +10,7 @@ import type {
   R2ObjectBody,
   R2Objects,
   R2PutOptions,
+  R2Range,
 } from '@cloudflare/workers-types/experimental'
 import { signRequest } from '../utils/s3-signer'
 
@@ -107,36 +110,37 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
     })
   }
 
-  const r2Bucket: R2Bucket = {
+  const r2Bucket = {
     async get(key: string, options?: R2GetOptions): Promise<R2ObjectBody | null> {
       const headers: Record<string, string> = {}
 
       if (options?.range) {
         if (typeof options.range === 'object') {
-          const { offset, length, suffix } = options.range
-          if (suffix) {
-            headers.Range = `bytes=-${suffix}`
+          const range = options.range as R2Range
+          if ('suffix' in range && range.suffix) {
+            headers.Range = `bytes=-${range.suffix}`
           }
-          else if (offset !== undefined) {
-            headers.Range = length
-              ? `bytes=${offset}-${offset + length - 1}`
-              : `bytes=${offset}-`
+          else if ('offset' in range && range.offset !== undefined) {
+            headers.Range = 'length' in range && range.length
+              ? `bytes=${range.offset}-${range.offset + range.length - 1}`
+              : `bytes=${range.offset}-`
           }
         }
       }
 
       if (options?.onlyIf) {
-        if (options.onlyIf.etagMatches) {
-          headers['If-Match'] = options.onlyIf.etagMatches
+        const onlyIf = options.onlyIf as R2Conditional
+        if (onlyIf.etagMatches) {
+          headers['If-Match'] = onlyIf.etagMatches
         }
-        if (options.onlyIf.etagDoesNotMatch) {
-          headers['If-None-Match'] = options.onlyIf.etagDoesNotMatch
+        if (onlyIf.etagDoesNotMatch) {
+          headers['If-None-Match'] = onlyIf.etagDoesNotMatch
         }
-        if (options.onlyIf.uploadedBefore) {
-          headers['If-Unmodified-Since'] = options.onlyIf.uploadedBefore.toUTCString()
+        if (onlyIf.uploadedBefore) {
+          headers['If-Unmodified-Since'] = onlyIf.uploadedBefore.toUTCString()
         }
-        if (options.onlyIf.uploadedAfter) {
-          headers['If-Modified-Since'] = options.onlyIf.uploadedAfter.toUTCString()
+        if (onlyIf.uploadedAfter) {
+          headers['If-Modified-Since'] = onlyIf.uploadedAfter.toUTCString()
         }
       }
 
@@ -165,7 +169,9 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
         size: Number.parseInt(response.headers.get('content-length') || '0', 10),
         etag: response.headers.get('etag') || '',
         httpEtag: response.headers.get('etag') || '',
-        checksums: {},
+        checksums: {
+          toJSON: () => ({}),
+        },
         uploaded: new Date(response.headers.get('last-modified') || Date.now()),
         httpMetadata: {
           contentType: response.headers.get('content-type') || undefined,
@@ -178,38 +184,41 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
             : undefined,
         },
         customMetadata,
+        storageClass: 'Standard',
         range: options?.range
           ? {
               offset: 0,
               length: Number.parseInt(response.headers.get('content-length') || '0', 10),
             }
           : undefined,
-        body: response.body!,
+        body: response.body! as any,
         bodyUsed: false,
         arrayBuffer: () => response.arrayBuffer(),
         text: () => response.text(),
         json: () => response.json(),
-        blob: () => response.blob(),
-        writeHttpMetadata: (headers: Headers) => {
-          if (r2Object.httpMetadata.contentType) {
-            headers.set('content-type', r2Object.httpMetadata.contentType)
+        blob: () => response.blob() as any,
+        bytes: async () => new Uint8Array(await response.arrayBuffer()),
+        writeHttpMetadata: ((headers: any) => {
+          const metadata = r2Object.httpMetadata as R2HTTPMetadata
+          if (metadata.contentType) {
+            headers.set('content-type', metadata.contentType)
           }
-          if (r2Object.httpMetadata.contentLanguage) {
-            headers.set('content-language', r2Object.httpMetadata.contentLanguage)
+          if (metadata.contentLanguage) {
+            headers.set('content-language', metadata.contentLanguage)
           }
-          if (r2Object.httpMetadata.contentDisposition) {
-            headers.set('content-disposition', r2Object.httpMetadata.contentDisposition)
+          if (metadata.contentDisposition) {
+            headers.set('content-disposition', metadata.contentDisposition)
           }
-          if (r2Object.httpMetadata.contentEncoding) {
-            headers.set('content-encoding', r2Object.httpMetadata.contentEncoding)
+          if (metadata.contentEncoding) {
+            headers.set('content-encoding', metadata.contentEncoding)
           }
-          if (r2Object.httpMetadata.cacheControl) {
-            headers.set('cache-control', r2Object.httpMetadata.cacheControl)
+          if (metadata.cacheControl) {
+            headers.set('cache-control', metadata.cacheControl)
           }
-          if (r2Object.httpMetadata.cacheExpiry) {
-            headers.set('expires', r2Object.httpMetadata.cacheExpiry.toUTCString())
+          if (metadata.cacheExpiry) {
+            headers.set('expires', metadata.cacheExpiry.toUTCString())
           }
-        },
+        }) as any,
       }
 
       return r2Object
@@ -217,29 +226,30 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
 
     async put(
       key: string,
-      value: ReadableStream | ArrayBuffer | ArrayBufferView | string,
+      value: ReadableStream | ArrayBuffer | ArrayBufferView | string | Blob | null,
       options?: R2PutOptions,
     ): Promise<R2Object> {
       const headers: Record<string, string> = {}
 
       if (options?.httpMetadata) {
-        if (options.httpMetadata.contentType) {
-          headers['Content-Type'] = options.httpMetadata.contentType
+        const metadata = options.httpMetadata as R2HTTPMetadata
+        if (metadata.contentType) {
+          headers['Content-Type'] = metadata.contentType
         }
-        if (options.httpMetadata.contentLanguage) {
-          headers['Content-Language'] = options.httpMetadata.contentLanguage
+        if (metadata.contentLanguage) {
+          headers['Content-Language'] = metadata.contentLanguage
         }
-        if (options.httpMetadata.contentDisposition) {
-          headers['Content-Disposition'] = options.httpMetadata.contentDisposition
+        if (metadata.contentDisposition) {
+          headers['Content-Disposition'] = metadata.contentDisposition
         }
-        if (options.httpMetadata.contentEncoding) {
-          headers['Content-Encoding'] = options.httpMetadata.contentEncoding
+        if (metadata.contentEncoding) {
+          headers['Content-Encoding'] = metadata.contentEncoding
         }
-        if (options.httpMetadata.cacheControl) {
-          headers['Cache-Control'] = options.httpMetadata.cacheControl
+        if (metadata.cacheControl) {
+          headers['Cache-Control'] = metadata.cacheControl
         }
-        if (options.httpMetadata.cacheExpiry) {
-          headers.Expires = options.httpMetadata.cacheExpiry.toUTCString()
+        if (metadata.cacheExpiry) {
+          headers.Expires = metadata.cacheExpiry.toUTCString()
         }
       }
 
@@ -251,8 +261,14 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
 
       // Convert value to appropriate format
       let body: ReadableStream | ArrayBuffer | string
-      if (ArrayBuffer.isView(value)) {
-        body = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength)
+      if (value === null) {
+        body = ''
+      }
+      else if (value instanceof Blob) {
+        body = await value.arrayBuffer()
+      }
+      else if (ArrayBuffer.isView(value)) {
+        body = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength) as ArrayBuffer
       }
       else {
         body = value
@@ -270,10 +286,14 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
         size: typeof value === 'string' ? value.length : 0,
         etag: response.headers.get('etag') || '',
         httpEtag: response.headers.get('etag') || '',
-        checksums: {},
+        checksums: {
+          toJSON: () => ({}),
+        },
         uploaded: new Date(),
-        httpMetadata: options?.httpMetadata || {},
+        httpMetadata: (options?.httpMetadata || {}) as R2HTTPMetadata,
         customMetadata: options?.customMetadata || {},
+        storageClass: 'Standard',
+        writeHttpMetadata: () => {},
       }
     },
 
@@ -329,7 +349,9 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
         size: Number.parseInt(response.headers.get('content-length') || '0', 10),
         etag: response.headers.get('etag') || '',
         httpEtag: response.headers.get('etag') || '',
-        checksums: {},
+        checksums: {
+          toJSON: () => ({}),
+        },
         uploaded: new Date(response.headers.get('last-modified') || Date.now()),
         httpMetadata: {
           contentType: response.headers.get('content-type') || undefined,
@@ -342,6 +364,8 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
             : undefined,
         },
         customMetadata,
+        storageClass: 'Standard',
+        writeHttpMetadata: () => {},
       }
     },
 
@@ -394,10 +418,14 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
           size,
           etag,
           httpEtag: etag,
-          checksums: {},
+          checksums: {
+            toJSON: () => ({}),
+          },
           uploaded: new Date(lastModified),
           httpMetadata: {},
           customMetadata: {},
+          storageClass: 'Standard',
+          writeHttpMetadata: () => {},
         })
       }
 
@@ -413,7 +441,7 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
       return {
         objects,
         truncated: isTruncated,
-        cursor: nextContinuationToken,
+        cursor: nextContinuationToken as any,
         delimitedPrefixes,
       }
     },
@@ -425,7 +453,7 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
     resumeMultipartUpload(_key: string, _uploadId: string): R2MultipartUpload {
       throw new Error('R2 multipart upload not yet implemented')
     },
-  }
+  } as R2Bucket
 
   return r2Bucket
 }

@@ -28,7 +28,7 @@ async function hmac(key: ArrayBuffer | Uint8Array, data: string): Promise<ArrayB
   const encoder = new TextEncoder()
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    key,
+    key as BufferSource,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign'],
@@ -73,7 +73,7 @@ export async function signRequest(params: SignatureParams): Promise<Record<strin
   const dateStamp = amzDate.slice(0, 8)
 
   // Canonical headers
-  const canonicalHeaders = {
+  const canonicalHeaders: Record<string, string> = {
     host,
     'x-amz-date': amzDate,
     ...headers,

@@ -128,7 +128,7 @@ export function createKVBinding(
     }
   }
 
-  const kvNamespace: KVNamespace = {
+  const kvNamespace = {
     async get(key: any, options?: any): Promise<any> {
       // Handle array of keys
       if (Array.isArray(key)) {
@@ -166,7 +166,7 @@ export function createKVBinding(
         body = value
       }
       else if (ArrayBuffer.isView(value)) {
-        body = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength)
+        body = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength) as ArrayBuffer
       }
       else if (value instanceof ReadableStream) {
         // Convert ReadableStream to ArrayBuffer
@@ -311,7 +311,7 @@ export function createKVBinding(
       const type = typeof options === 'string' ? options : options?.type
       return getValueWithMetadata(key, type)
     },
-  }
+  } as KVNamespace
 
   return kvNamespace
 }

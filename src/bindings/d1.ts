@@ -8,7 +8,7 @@ interface _D1APIQueryRequest {
 
 interface D1APIQueryResponse {
   results: any[]
-  success: boolean
+  success: true
   meta: {
     served_by?: string
     duration?: number
@@ -32,7 +32,7 @@ class D1PreparedStatementImpl implements D1PreparedStatement {
 
   bind(...values: unknown[]): D1PreparedStatement {
     this.bindings = values
-    return this
+    return this as D1PreparedStatement
   }
 
   async run<T = unknown>(): Promise<D1Result<T>> {
@@ -81,11 +81,13 @@ class D1PreparedStatementImpl implements D1PreparedStatement {
     return firstRow
   }
 
-  async raw<T = unknown[]>(options?: { columnNames?: boolean }): Promise<T[]> {
+  raw<T = unknown[]>(options: { columnNames: true }): Promise<[string[], ...T[]]>
+  raw<T = unknown[]>(options?: { columnNames?: false }): Promise<T[]>
+  async raw<T = unknown[]>(options?: { columnNames?: boolean }): Promise<T[] | [string[], ...T[]]> {
     const result = await this.run()
 
     if (!result.results || result.results.length === 0) {
-      return [] as T[]
+      return options?.columnNames ? [[] as unknown as string[], ...([] as T[])] : ([] as T[])
     }
 
     // Convert objects to arrays
@@ -100,8 +102,8 @@ class D1PreparedStatementImpl implements D1PreparedStatement {
     if (options?.columnNames && result.results.length > 0) {
       const firstRow = result.results[0]
       if (typeof firstRow === 'object' && firstRow !== null) {
-        const columnNames = Object.keys(firstRow) as T
-        return [columnNames, ...raw]
+        const columnNames = Object.keys(firstRow)
+        return [columnNames, ...raw] as [string[], ...T[]]
       }
     }
 
@@ -115,14 +117,14 @@ export function createD1Binding(
 ): D1Database {
   return {
     prepare(query: string): D1PreparedStatement {
-      return new D1PreparedStatementImpl(query, client, databaseId)
+      return new D1PreparedStatementImpl(query, client, databaseId) as D1PreparedStatement
     },
 
     async batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
       const endpoint = `/accounts/${client.getAccountId()}/d1/database/${databaseId}/query`
 
       const queries = statements.map((stmt) => {
-        const impl = stmt as D1PreparedStatementImpl
+        const impl = stmt as unknown as D1PreparedStatementImpl
         return {
           sql: (impl as any).query,
           params: (impl as any).bindings,
@@ -132,7 +134,7 @@ export function createD1Binding(
       const data = await client.post<D1APIQueryResponse[]>(endpoint, queries)
 
       return data.map(result => ({
-        success: result.success,
+        success: true as const,
         results: result.results as T[],
         meta: {
           served_by: result.meta.served_by || '',
