@@ -13,6 +13,7 @@ import type {
   R2Range,
 } from '@cloudflare/workers-types/experimental'
 import { signRequest } from '../utils/s3-signer'
+import { encodeS3Key } from '../utils/uri-encoder'
 
 export interface R2Config {
   accountId: string
@@ -36,7 +37,7 @@ export function createR2Binding(config: R2Config, bucketName: string): R2Bucket 
     const queryString = options?.queryParams
       ? `?${new URLSearchParams(options.queryParams).toString()}`
       : ''
-    const url = `${baseUrl}/${encodeURIComponent(key)}${queryString}`
+    const url = `${baseUrl}/${encodeS3Key(key)}${queryString}`
 
     // Convert ReadableStream to ArrayBuffer for signing
     let body: ArrayBuffer | string | undefined
