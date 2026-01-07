@@ -1,7 +1,7 @@
 {
   "name": "openwrangler",
   "type": "module",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -18,13 +18,18 @@
     "dev": "cd ./playground && pnpm dev",
     "build": "unbuild",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "deploy": "run-s deploy.patch deploy.build deploy.publish",
+    "deploy.patch": "pnpm version patch --no-git-tag-version && pnpm --filter @bino0216/nitro-cloudflare-dev version patch --no-git-tag-version && git add . && git commit -m \"chore: release\"",
+    "deploy.build": "pnpm build && pnpm --filter @bino0216/nitro-cloudflare-dev build",
+    "deploy.publish": "pnpm publish --no-git-checks && pnpm --filter @bino0216/nitro-cloudflare-dev publish --no-git-checks"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^6.7.3",
     "@bino0216/nitro-cloudflare-dev": "workspace:*",
     "@cloudflare/workers-types": "^4.20251231.0",
     "eslint": "^9.39.2",
+    "npm-run-all": "^4.1.5",
     "nuxt": "^3.15.0",
     "typescript": "^5.7.2",
     "unbuild": "^3.3.1",
