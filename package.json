@@ -1,7 +1,7 @@
 {
   "name": "openwrangler",
   "type": "module",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -20,7 +20,10 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "deploy": "run-s deploy.patch deploy.build deploy.publish",
-    "deploy.patch": "pnpm version patch --no-git-tag-version && pnpm --filter @bino0216/nitro-cloudflare-dev version patch --no-git-tag-version && git add . && git commit -m \"chore: release\"",
+    "deploy.patch": "pnpm version patch --no-git-tag-version && cd packages/nitro-cloudflare-dev && pnpm version patch --no-git-tag-version && git add . && git commit -m \"chore: release\"",
+    "deploy.patch.root": "pnpm version patch --no-git-tag-version",
+    "deploy.patch.nitro-cloudflare-dev": "cd packages/nitro-cloudflare-dev && pnpm version patch --no-git-tag-version",
+    "deploy.patch.commit": "git add . && git commit -m \"chore: release\"",
     "deploy.build": "pnpm build && pnpm --filter @bino0216/nitro-cloudflare-dev build",
     "deploy.publish": "pnpm publish --no-git-checks && pnpm --filter @bino0216/nitro-cloudflare-dev publish --no-git-checks"
   },
