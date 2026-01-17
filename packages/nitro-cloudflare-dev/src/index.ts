@@ -22,6 +22,7 @@ export interface CloudflareDevOptions {
   environment?: string
   persistDir?: string
   silent?: boolean
+  remote?: boolean
   remoteCredentials?: {
     accountId?: string
     apiToken?: string
@@ -98,7 +99,7 @@ async function parseWranglerConfig(configPath: string): Promise<RemoteBinding[]>
     // Parse R2 buckets
     const r2Bindings = parseTomlBindings(content, 'r2_buckets')
     for (const item of r2Bindings) {
-      if (item.remote === true && typeof item.binding === 'string') {
+      if (typeof item.binding === 'string') {
         remoteBindings.push({
           type: 'r2',
           name: item.binding,
@@ -110,7 +111,7 @@ async function parseWranglerConfig(configPath: string): Promise<RemoteBinding[]>
     // Parse KV namespaces
     const kvBindings = parseTomlBindings(content, 'kv_namespaces')
     for (const item of kvBindings) {
-      if (item.remote === true && typeof item.binding === 'string') {
+      if (typeof item.binding === 'string') {
         remoteBindings.push({
           type: 'kv',
           name: item.binding,
@@ -122,7 +123,7 @@ async function parseWranglerConfig(configPath: string): Promise<RemoteBinding[]>
     // Parse D1 databases
     const d1Bindings = parseTomlBindings(content, 'd1_databases')
     for (const item of d1Bindings) {
-      if (item.remote === true && typeof item.binding === 'string') {
+      if (typeof item.binding === 'string') {
         remoteBindings.push({
           type: 'd1',
           name: item.binding,
@@ -138,7 +139,7 @@ async function parseWranglerConfig(configPath: string): Promise<RemoteBinding[]>
 
     if (config.r2_buckets) {
       for (const bucket of config.r2_buckets) {
-        if (bucket.remote === true) {
+        if (bucket.binding) {
           remoteBindings.push({
             type: 'r2',
             name: bucket.binding,
@@ -150,7 +151,7 @@ async function parseWranglerConfig(configPath: string): Promise<RemoteBinding[]>
 
     if (config.kv_namespaces) {
       for (const kv of config.kv_namespaces) {
-        if (kv.remote === true) {
+        if (kv.binding) {
           remoteBindings.push({
             type: 'kv',
             name: kv.binding,
@@ -162,7 +163,7 @@ async function parseWranglerConfig(configPath: string): Promise<RemoteBinding[]>
 
     if (config.d1_databases) {
       for (const d1 of config.d1_databases) {
-        if (d1.remote === true) {
+        if (d1.binding) {
           remoteBindings.push({
             type: 'd1',
             name: d1.binding,
@@ -241,6 +242,7 @@ async function nitroModule(nitro: Nitro) {
     configPath,
     persistDir,
     environment: nitro.options.cloudflareDev?.environment,
+    remote: nitro.options.cloudflareDev?.remote ?? false,
     remoteBindings,
     remoteCredentials: nitro.options.cloudflareDev?.remoteCredentials,
   }

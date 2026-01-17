@@ -9,6 +9,7 @@ interface RuntimeConfig {
     configPath: string
     persistDir: string
     environment?: string
+    remote: boolean
     remoteBindings: RemoteBinding[]
     remoteCredentials: {
       accountId?: string
@@ -75,7 +76,7 @@ export default <NitroAppPlugin> function (nitroApp) {
 
 async function _getPlatformProxy() {
   const runtimeConfig: RuntimeConfig = useRuntimeConfig()
-  const { remoteBindings, remoteCredentials } = runtimeConfig.wrangler
+  const { remote, remoteBindings, remoteCredentials } = runtimeConfig.wrangler
 
   // Get local wrangler proxy first
   const _pkg = 'wrangler' // Bypass bundling!
@@ -98,8 +99,8 @@ async function _getPlatformProxy() {
   if (!accountId || !apiToken) {
     console.warn('config remoteCredentials is empty. then remote is not working')
   }
-  // If there are remote bindings, overlay them with openwrangler
-  if (remoteBindings.length > 0 && accountId && apiToken) {
+  // If remote is enabled, overlay bindings with openwrangler
+  if (remote && remoteBindings.length > 0 && accountId && apiToken) {
     const config = { accountId, apiToken }
     const { createR2Binding, createKVBinding, createD1Binding } = await import('openwrangler')
     // Replace remote bindings in proxy.env

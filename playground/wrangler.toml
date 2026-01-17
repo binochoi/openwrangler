@@ -9,4 +9,3 @@ assets = { directory = "./.output/public/", binding = "ASSETS" }
 [[r2_buckets]]
 binding = "R2Storage"
 bucket_name = "longtake-v2"
-remote = true
