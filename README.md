@@ -1,28 +1,27 @@
 # openwrangler
 
-miniflare의 버그와 한계를 해결하는 Cloudflare 바인딩 구현 라이브러리
+A Cloudflare bindings implementation library that solves miniflare's bugs and limitations
 
-## 배경
+## Background
 
-Cloudflare Workers 개발 환경에서 `wrangler dev`는 내부적으로 miniflare를 사용하여 R2, KV, D1 등의 바인딩을 로컬에서 시뮬레이션합니다. 하지만 miniflare는 다음과 같은 문제점이 있습니다:
+Cloudflare Workers development environment uses miniflare internally via `wrangler dev` to simulate bindings like R2, KV, and D1 locally. However, miniflare has critical issues:
 
-### miniflare의 문제점
+### miniflare's Problems
 
-1. **R2 Buffer 처리 버그**: Node.js Buffer를 R2에 업로드할 때 제대로 처리하지 못하는 버그
-2. **remote 옵션 미작동**: `wrangler.toml`의 `remote = true` 옵션이 실제로 작동하지 않음
-3. **프로덕션 환경과의 차이**: 로컬 시뮬레이션 환경이라 실제 프로덕션과 동작이 다를 수 있음
+1. **R2 Buffer Processing Bug**: Fails to properly handle Node.js Buffer when uploading to R2
+2. **remote Option Errors**: The `remote = true` option in `wrangler.toml` throws errors, making it completely unusable
 
-### openwrangler의 해결책
+### openwrangler's Solution
 
-openwrangler는 miniflare를 우회하고 **Cloudflare REST API를 직접 호출**하여 이러한 문제들을 해결합니다:
+openwrangler bypasses miniflare and **directly calls Cloudflare REST APIs** to solve these problems:
 
-- **R2**: S3 호환 API를 통해 실제 Cloudflare R2 버킷에 직접 접근
-- **KV**: Cloudflare KV REST API로 실제 KV 네임스페이스 사용
-- **D1**: Cloudflare D1 REST API로 실제 D1 데이터베이스 쿼리
+- **R2**: Direct access to actual Cloudflare R2 buckets via S3-compatible API
+- **KV**: Use real KV namespaces via Cloudflare KV REST API
+- **D1**: Query real D1 databases via Cloudflare D1 REST API
 
-개발 환경에서도 실제 프로덕션 리소스를 사용할 수 있어, 프로덕션과 동일한 환경에서 개발 및 테스트가 가능합니다.
+You can use actual production resources in your development environment, enabling development and testing in an environment identical to production.
 
-## 설치
+## Installation
 
 ```bash
 npm install openwrangler
@@ -30,9 +29,9 @@ npm install openwrangler
 pnpm add openwrangler
 ```
 
-## 사용법
+## Usage
 
-### 1. 직접 사용 (Node.js)
+### 1. Direct Usage (Node.js)
 
 ```typescript
 import { createR2Binding, createKVBinding, createD1Binding } from 'openwrangler'
@@ -44,7 +43,7 @@ const r2 = createR2Binding({
   r2SecretAccessKey: 'your-r2-secret-key',
 }, 'bucket-name')
 
-await r2.put('image.png', buffer)  // ✅ Buffer 정상 작동
+await r2.put('image.png', buffer)  // ✅ Buffer works correctly
 const file = await r2.get('image.png')
 
 // KV
@@ -65,17 +64,17 @@ const d1 = createD1Binding({
 const result = await d1.prepare('SELECT * FROM users').all()
 ```
 
-### 2. Nitro/Nuxt 통합 (`@bino0216/nitro-cloudflare-dev`)
+### 2. Nitro/Nuxt Integration (`@bino0216/nitro-cloudflare-dev`)
 
-Nitro와 Nuxt에서는 통합 모듈을 사용하여 더 쉽게 설정할 수 있습니다.
+For Nitro and Nuxt, use the integration module for easier setup.
 
-#### 설치
+#### Installation
 
 ```bash
 npm install @bino0216/nitro-cloudflare-dev
 ```
 
-#### Nuxt 설정
+#### Nuxt Configuration
 
 ```typescript
 // nuxt.config.ts
@@ -85,7 +84,7 @@ export default defineNuxtConfig({
   nitro: {
     modules: [nitroCloudflareDev],
     cloudflareDev: {
-      remote: true,  // 실제 Cloudflare 리소스 사용
+      remote: true,  // Use actual Cloudflare resources
       remoteCredentials: {
         accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
         apiToken: process.env.CLOUDFLARE_API_TOKEN,
@@ -99,7 +98,7 @@ export default defineNuxtConfig({
 })
 ```
 
-#### wrangler.toml 설정
+#### wrangler.toml Configuration
 
 ```toml
 [[r2_buckets]]
@@ -116,7 +115,7 @@ database_name = "my-database"
 database_id = "your-db-id"
 ```
 
-#### 사용
+#### Usage
 
 ```typescript
 // server/api/example.ts
@@ -136,83 +135,83 @@ export default defineEventHandler(async (event) => {
 })
 ```
 
-### 3. Buffer 호환성 Wrapper (miniflare 사용 시)
+### 3. Buffer Compatibility Wrapper (When Using miniflare)
 
-`remote: false`로 miniflare를 사용하면서 R2 Buffer 문제만 해결하고 싶다면:
+If you want to use miniflare with `remote: false` while only fixing the R2 Buffer issue:
 
 ```typescript
 import { wrapR2BucketForDev } from 'openwrangler'
 
-// miniflare에서 받은 R2 바인딩을 감싸기
+// Wrap the R2 binding from miniflare
 const r2 = wrapR2BucketForDev(miniflareR2Bucket)
 
-// 이제 Buffer가 정상 작동
+// Buffer now works correctly
 await r2.put('file.bin', Buffer.from([1, 2, 3]))
 ```
 
-`@bino0216/nitro-cloudflare-dev`는 `remote: false`일 때 자동으로 모든 R2 바인딩에 이 wrapper를 적용합니다.
+`@bino0216/nitro-cloudflare-dev` automatically applies this wrapper to all R2 bindings when `remote: false`.
 
-## 지원 바인딩
+## Supported Bindings
 
-| 바인딩 | 타입 | REST API | 지원 |
-|--------|------|----------|------|
-| R2 | `R2Bucket` | S3 호환 API | ✅ |
+| Binding | Type | REST API | Support |
+|---------|------|----------|---------|
+| R2 | `R2Bucket` | S3-compatible API | ✅ |
 | KV | `KVNamespace` | Cloudflare KV API | ✅ |
 | D1 | `D1Database` | Cloudflare D1 API | ✅ |
 
-모든 타입은 `@cloudflare/workers-types`에서 import하여 실제 Cloudflare Workers와 100% 호환됩니다.
+All types are imported from `@cloudflare/workers-types` to ensure 100% compatibility with actual Cloudflare Workers.
 
-## 사용 사례
+## Use Cases
 
-### 개발 환경에서 실제 데이터 사용
-로컬 개발 중에도 실제 프로덕션 리소스에 접근하여 개발 및 디버깅
+### Development with Real Data
+Access actual production resources during local development for development and debugging
 
-### miniflare 버그 우회
-R2 Buffer 처리 등 miniflare의 알려진 버그를 우회
+### Bypass miniflare Bugs
+Work around known miniflare bugs such as R2 Buffer processing
 
-### 통합 테스트
-실제 Cloudflare 서비스를 대상으로 통합 테스트 실행
+### Integration Testing
+Run integration tests against actual Cloudflare services
 
 ### CI/CD
-GitHub Actions 등에서 실제 Cloudflare 리소스를 사용한 테스트
+Test with real Cloudflare resources in GitHub Actions and other CI/CD pipelines
 
-## 개발
+## Development
 
 ```bash
-# 의존성 설치
+# Install dependencies
 pnpm install
 
-# 빌드
+# Build
 pnpm build
 
-# playground 실행 (Nuxt + Nitro 테스트 환경)
+# Run playground (Nuxt + Nitro test environment)
 pnpm dev
 ```
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 openwrangler/
 ├── src/
-│   ├── index.ts              # 메인 export
+│   ├── index.ts              # Main export
 │   ├── bindings/
-│   │   ├── r2.ts            # R2 바인딩 구현 (S3 API)
+│   │   ├── r2.ts            # R2 binding implementation (S3 API)
 │   │   ├── r2.dev.ts        # R2 Buffer wrapper
-│   │   ├── kv.ts            # KV 바인딩 구현
-│   │   └── d1.ts            # D1 바인딩 구현
+│   │   ├── kv.ts            # KV binding implementation
+│   │   └── d1.ts            # D1 binding implementation
 │   └── utils/
-│       ├── http-client.ts   # Cloudflare API 클라이언트
-│       └── s3-signer.ts     # AWS S3 서명 유틸
+│       ├── http-client.ts   # Cloudflare API client
+│       └── s3-signer.ts     # AWS S3 signing utility
 ├── packages/
-│   └── nitro-cloudflare-dev/ # Nitro/Nuxt 통합 모듈
-└── playground/               # Nuxt 테스트 환경
+│   └── nitro-cloudflare-dev/ # Nitro/Nuxt integration module
+└── playground/               # Nuxt test environment
 ```
 
-## 라이선스
+## License
 
 MIT
 
-## 관련 이슈
+## Related Issues
 
 - [miniflare R2 Buffer issue](https://github.com/cloudflare/workers-sdk/issues)
-- [wrangler remote binding not working](https://github.com/cloudflare/workers-sdk/issues)
+- [wrangler remote binding errors](https://github.com/cloudflare/workers-sdk/issues)
