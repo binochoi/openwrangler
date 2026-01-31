@@ -3,6 +3,7 @@ import type { GetPlatformProxyOptions, PlatformProxy } from 'wrangler'
 import type { RemoteBinding } from '../index'
 // @ts-ignore
 import { getRequestURL, useRuntimeConfig } from '#imports'
+import { wrapR2BucketForDev } from 'openwrangler'
 
 interface RuntimeConfig {
   wrangler: {
@@ -132,6 +133,17 @@ async function _getPlatformProxy() {
             (proxy.env as any)[binding.name] = createD1Binding(config, binding.databaseId)
           }
           break
+        }
+      }
+    }
+  }
+  // remote: false일 때도 dev wrapper 적용 (Buffer 호환성 문제 해결)
+  else if (!remote && remoteBindings.length > 0) {
+    for (const binding of remoteBindings) {
+      if (binding.type === 'r2' && binding.name) {
+        const localR2 = (proxy.env as any)[binding.name]
+        if (localR2) {
+          (proxy.env as any)[binding.name] = wrapR2BucketForDev(localR2)
         }
       }
     }

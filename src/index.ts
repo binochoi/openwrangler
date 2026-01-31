@@ -5,6 +5,8 @@ import { createKVBinding as createKVBindingImpl } from './bindings/kv'
 import { createR2Binding as createR2BindingImpl } from './bindings/r2'
 import { CloudflareAPIClient } from './utils/http-client'
 
+export { wrapR2BucketForDev } from './bindings/r2.dev'
+
 export interface BindingsConfig {
   accountId: string
   apiToken: string
