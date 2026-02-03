@@ -271,7 +271,7 @@ export function createKVBinding(
       if (data.list_complete) {
         return {
           list_complete: true,
-          keys: data.keys.map(k => ({
+          keys: (data.keys || []).map(k => ({
             name: k.name,
             expiration: k.expiration,
             metadata: k.metadata as Metadata,
@@ -282,7 +282,7 @@ export function createKVBinding(
       else {
         return {
           list_complete: false,
-          keys: data.keys.map(k => ({
+          keys: (data.keys || []).map(k => ({
             name: k.name,
             expiration: k.expiration,
             metadata: k.metadata as Metadata,
