@@ -1,7 +1,7 @@
 {
   "name": "@bino0216/nitro-cloudflare-dev",
   "type": "module",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "private": false,
   "packageManager": "pnpm@10.5.2",
   "description": "POC module to enable access to the Cloudflare runtime bindings in development server of Nitro and Nuxt",
